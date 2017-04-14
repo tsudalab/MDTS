@@ -15,9 +15,13 @@ class Result:
         self.max_depth_reached = 0
         self.no_nodes = 0
         self.avg_node_visit = 0.0
+        self.last_selected_node_level = 0
+        self.last_selected_node_struct = None
 
-    def format(self, chkd_candidates, max_flag):
+    def format(self, no_candidates, chkd_candidates, max_flag, last_selected_node):
         self.checked_candidates_DS = [(ast.literal_eval(x), v) for (x,v) in chkd_candidates.items()]
+        if (no_candidates is not None) and (len(self.checked_candidates_DS) > no_candidates):
+            self.checked_candidates_DS = self.checked_candidates_DS[:no_candidates]
         self.checked_candidates_size = len(self.checked_candidates_DS)
         self.checked_candidates, self.fx = map(list, zip(*self.checked_candidates_DS))
         self.best_fx = []
@@ -39,6 +43,8 @@ class Result:
                     self.best_fx.append(x)
                 else:
                     self.best_fx.append(self.best_fx[-1])
+        self.last_selected_node_level = last_selected_node.level
+        self.last_selected_node_struct = last_selected_node.struct[:]
 
     def save(self, filename):
         wrap = {}
@@ -52,6 +58,8 @@ class Result:
         wrap['max_depth_reached'] = self.max_depth_reached
         wrap['no_nodes'] = self.no_nodes
         wrap['avg_node_visit'] = self.avg_node_visit
+        wrap['last_selected_node_level'] = self.last_selected_node_level
+        wrap['last_selected_node_struct'] = self.last_selected_node_struct
         np.savez(filename, **wrap)
 
     def load(self, filename):
@@ -66,3 +74,5 @@ class Result:
         self.max_depth_reached = wrap['max_depth_reached']
         self.no_nodes = wrap['no_nodes']
         self.avg_node_visit = wrap['avg_node_visit']
+        self.last_selected_node_level = wrap['last_selected_node_level']
+        self.last_selected_node_struct = wrap['last_selected_node_struct']

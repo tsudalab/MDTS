@@ -94,6 +94,7 @@ class Node:
                     x, y, z = child.get_info()
                     nodes +=x
                     visits += y
-                    depth = z
+                    if z > depth:
+                        depth = z
         return nodes, visits, depth
 
