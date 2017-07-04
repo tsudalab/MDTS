@@ -29,25 +29,31 @@ class Node:
         else:
             return False
 
-    def select(self, max_flag):
+    def select(self, max_flag, ucb_mean):
         if self.has_all_children():
             c = ((math.sqrt(2)/4)*(self.max_range-self.min_range))*self.adjust_val
             u_scores = {}
             if max_flag:
                 for child in self.children.itervalues():
                     if child is not None:
-                        u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) /
+                        if ucb_mean:
+                            u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) /
                                                                                        child.v))))
+                        else:
+                            u_scores[child.value] = child.max_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
                 max_idxs = [i for i, x in u_scores.iteritems() if x == max(u_scores.itervalues())]
                 idx = np.random.choice(max_idxs)
             else:
                 for child in self.children.itervalues():
                     if child is not None:
-                        u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) /
+                        if ucb_mean:
+                            u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) /
                                                                                        child.v))))
+                        else:
+                            u_scores[child.value] = child.min_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
                 min_idxs = [i for i, x in u_scores.iteritems() if x == min(u_scores.itervalues())]
                 idx = np.random.choice(min_idxs)
-            return self.children[idx].select(max_flag)
+            return self.children[idx].select(max_flag, ucb_mean)
         else:
             return self
 
