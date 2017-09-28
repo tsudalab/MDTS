@@ -1,5 +1,7 @@
 import mdts
 import numpy as np
+import itertools
+
 
 
 
@@ -15,6 +17,19 @@ def get_reward(struct):
         print "error"
     return cond
 
+### X is the matrix of all possible candidates. The candidate space needs to be defined if you want to use
+  # Bayesian optimization within MDTS
+X=[]
+
+a=np.asarray(range(16))
+
+for cand in itertools.combinations(a,8):
+    ls = np.zeros(16,dtype=int)
+    for i in cand:
+        ls[i]=1
+    X.append(ls)
+
+X=np.array(X)
 
 ### Initialize the tree with the following parameters
 ### no_positions: number of positions in each structure. For example, 16 atoms.
@@ -25,14 +40,16 @@ def get_reward(struct):
     #shuffle# or a list
 ### max_flag: if True the algorithm searches for maximum reward, else for minimum
 ### expand_children : number of children to expand at each node. Default is "all". i.e. expand all possible children
-### play_out: number of play outs et each node. Default is 1
+### play_out: number of play outs et each node. Default is 1. Please note if you set the parameter use_combo to True,
+    #play_out can not be 1
 ### data: numpy ndarray representing the candidates space. Default is None. If specified the "no_positions",
     # "atom_types", and "atom_const" parameters will be ignored and there values will be taken from the data.
     # This is a slower option, not recommended unless there are complex constraints on the structures
+    # data needs to be assigned if you want to use the option use_combo=True
 
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=range(16),
-                max_flag=True,expand_children=2, play_out=1, data=None)
+                max_flag=True,expand_children=2, play_out=200, data=X, ucb="mean", use_combo=True)
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
 res=myTree.search(display=False,no_candidates=1000)

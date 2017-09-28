@@ -6,6 +6,9 @@ python >= 2.7.x
 
 numpy >=1.12.x
 
+COMBO 
+https://github.com/tsudalab/combo
+
 # Installation
 Download or clone the github repository, e.g.
 git clone https://github.com/tsudalab/MDTS
