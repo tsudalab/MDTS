@@ -20,15 +20,12 @@ def get_reward(struct):
 ### X is the matrix of all possible candidates. The candidate space needs to be defined if you want to use
   # Bayesian optimization within MDTS
 X=[]
-
 a=np.asarray(range(16))
-
 for cand in itertools.combinations(a,8):
     ls = np.zeros(16,dtype=int)
     for i in cand:
         ls[i]=1
     X.append(ls)
-
 X=np.array(X)
 
 ### Initialize the tree with the following parameters
@@ -46,6 +43,10 @@ X=np.array(X)
     # "atom_types", and "atom_const" parameters will be ignored and there values will be taken from the data.
     # This is a slower option, not recommended unless there are complex constraints on the structures
     # data needs to be assigned if you want to use the option use_combo=True
+### ucb: it can be either "mean" or "best", it represents taking either average or best ucb score for Monte Carlo tree
+    # search
+### use_combo: weather to use Bayesian optimisation or not in combination with Monte Carlo tree search.
+    # COMBO package is used to engieer the palyout instead of random selection.
 
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=range(16),
