@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mdts',
-      version='0.3',
+      version='0.4',
       description='Automatic Materials Design using Tree Search',
       url='https://github.com/tsudalab/MDTS',
       author='Thaer M. Dieb',

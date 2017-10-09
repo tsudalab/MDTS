@@ -4,7 +4,6 @@ import itertools
 
 
 
-
 ### Thermal conductivity for (Si:Ge=1:1) alloy with 16 atoms in the interfacial structure
 DB_16=np.load('./DB_16.npy').item()
 
@@ -31,12 +30,12 @@ X=np.array(X)
 ### Initialize the tree with the following parameters
 ### no_positions: number of positions in each structure. For example, 16 atoms.
 ### atom_types: atom types. For example, types of atoms: 0 for Si and 1 for Ge
-### atom_const: number of each atom type in the structure. For example, 8 atoms Si and 8 atoms Ge. default is None
-### get_reward: the simulation function
+### atom_const: number of each atom type in the structure. For example, 8 atoms Si and 8 atoms Ge. Default is None
+### get_reward: the experiment simulation function
 ### positions_order: define the order to assign atoms to the positions in the structure: "direct", "reverse",
-    #shuffle# or a list
+    #shuffle# or a list. Default is "reverse"
 ### max_flag: if True the algorithm searches for maximum reward, else for minimum
-### expand_children : number of children to expand at each node. Default is "all". i.e. expand all possible children
+### expand_children : number of children to expand at each node. Default is "1". i.e. expand one child at a time.
 ### play_out: number of play outs et each node. Default is 1. Please note if you set the parameter use_combo to True,
     #play_out can not be 1
 ### data: numpy ndarray representing the candidates space. Default is None. If specified the "no_positions",
@@ -44,16 +43,19 @@ X=np.array(X)
     # This is a slower option, not recommended unless there are complex constraints on the structures
     # data needs to be assigned if you want to use the option use_combo=True
 ### ucb: it can be either "mean" or "best", it represents taking either average or best ucb score for Monte Carlo tree
-    # search
+    # search. Default is "mean"
 ### use_combo: weather to use Bayesian optimisation or not in combination with Monte Carlo tree search.
-    # COMBO package is used to engieer the palyout instead of random selection.
-
+    # COMBO package is used to engineer the palyout instead of random selection.
+### combo_init_random: the initial random selection for Bayesian optimisation. Default is 1
+### combo_step: the interval for Bayesian optimisation to perfrom hyperparameter optimization. Default is 1
+### combo_lvl: the level of the tree at which start to apply Bayesian optimisation. Default is 1 (apply at all levels)
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=range(16),
-                max_flag=True,expand_children=2, play_out=200, data=X, ucb="mean", use_combo=True)
+                max_flag=True,expand_children=2, play_out=100, data=X, ucb="mean", use_combo=True, combo_init_random=10,
+                 combo_step=10, combo_lvl=4)
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
-res=myTree.search(display=False,no_candidates=1000)
+res=myTree.search(display=True,no_candidates=1000)
 
 ### Optimal reward
 print res.optimal_fx

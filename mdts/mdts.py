@@ -10,11 +10,12 @@ import math
 
 
 class Tree:
-    def __init__(self, get_reward, positions_order="direct", max_flag=True, expand_children="all",
-                 data=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, ucb="best", use_combo=False):
+    def __init__(self, get_reward, positions_order="reverse", max_flag=True, expand_children=1,
+                 data=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, ucb="mean", use_combo=False,
+                 combo_init_random=1, combo_step=1, combo_lvl=1):
 
-        self.data = data
         if data is None:
+            self.data=None
             if (no_positions is None) or (atom_types is None):
                 sys.exit("no_positions and atom_types should not be None")
             else:
@@ -22,6 +23,7 @@ class Tree:
                 self.atom_types = atom_types
                 self.atom_const = atom_const
         else:
+            self.data = data.copy()
             self.no_positions = data.shape[1]
             self.atom_types = np.unique(data)
         if positions_order == "direct":
@@ -49,6 +51,9 @@ class Tree:
         self.result = Result()
         self.play_out = play_out
         self.use_combo = use_combo
+        self.combo_init_random = combo_init_random
+        self.combo_step = combo_step
+        self.combo_lvl = combo_lvl
         if use_combo is True and data is None:
             sys.exit("Please set data to be able to use combo")
         if ucb == "best":
@@ -58,10 +63,10 @@ class Tree:
         else:
             sys.exit("Please set ucb to either mean or best")
 
-    def _simulate(self, struct):
+    def _simulate(self, struct, lvl):
         if self.data is None:
             return self._simulate_const(struct)
-        elif self.use_combo:
+        elif (self.use_combo) and (lvl >= self.combo_lvl):
             return self._simulate_combo(struct)
         else:
             return self._simulate_matrix(struct)
@@ -120,23 +125,33 @@ class Tree:
         if sub_space.shape[0] !=0:
             def combo_simulater(action):
                 if str(list(sub_space[action[0]])) in self.chkd_candidates.keys():
-                    return self.chkd_candidates[str(list(sub_space[action[0]]))]
+                    if self.max_flag:
+                        return self.chkd_candidates[str(list(sub_space[action[0]]))]
+                    else:
+                        return -self.chkd_candidates[str(list(sub_space[action[0]]))]
                 else:
-                    return self.get_reward(sub_space[action[0]])
+                    if self.max_flag:
+                        return self.get_reward(sub_space[action[0]])
+                    else:
+                        return -self.get_reward(sub_space[action[0]])
+
             policy = combo.search.discrete.policy(test_X=sub_space)
             if self.play_out==1:
                 sys.exit("Play_out can not be 1 when use_combo is True")
-            else:
-                combo_intitial_random = int(math.ceil(self.play_out/3))
 
-            res = policy.random_search(max_num_probes=combo_intitial_random, simulator=combo_simulater)
-            res = policy.bayes_search(max_num_probes=self.play_out-combo_intitial_random, simulator=combo_simulater
-                                      , score='TS', interval=combo_intitial_random, num_rand_basis=5000)
+            res = policy.random_search(max_num_probes=self.combo_init_random, simulator=combo_simulater)
+            res = policy.bayes_search(max_num_probes=self.play_out-self.combo_init_random, simulator=combo_simulater
+                                      , score='TS', interval=self.combo_step, num_rand_basis=5000)
             for i in range(len(res.chosed_actions[0:res.total_num_search])):
                 action=res.chosed_actions[i]
-                e=res.fx[i]
+                if self.max_flag:
+                    e=res.fx[i]
+                else:
+                    e=-res.fx[i]
                 if str(list(sub_space[action])) not in self.chkd_candidates.keys():
                     self.chkd_candidates[str(list(sub_space[action]))] = e
+                    #action_origin_idx = np.where(np.all(self.data== sub_space[action], axis=1))[0]
+                    #self.data = np.delete(self.data,action_origin_idx[0],axis=0)
                 chosen_candidates.append(list(sub_space[action]))
 
         return chosen_candidates
@@ -163,7 +178,7 @@ class Tree:
                     position = self.positions_order[current.level]
                     try_children = current.expand(position, self.expand_children)
                     for try_child in try_children:
-                        all_struct = self._simulate(try_child.struct)
+                        all_struct = self._simulate(try_child.struct,try_child.level)
                         if len(all_struct) != 0:
                             rewards = []
                             for struct in all_struct:
@@ -180,7 +195,7 @@ class Tree:
                             try_child.bck_prop(best_e)
                         else:
                             current.children[try_child.value] = None
-                            all_struct = self._simulate(current.struct)
+                            all_struct = self._simulate(current.struct,current.level)
                             rewards = []
                             for struct in all_struct:
                                 if str(struct) not in self.chkd_candidates.keys():
