@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(name='mdts',
-      version='0.4',
+      version='0.5',
       description='Automatic Materials Design using Tree Search',
       url='https://github.com/tsudalab/MDTS',
-      author='Thaer M. Dieb',
-      author_email='MOUSTAFADIEB.Thaer@nims.go.jp',
+      author='Thaer Dieb',
+      author_email='thaer.dieb@gmail.com',
       license='MIT',
       packages=['mdts'],
       zip_safe=False)

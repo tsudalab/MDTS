@@ -7,12 +7,13 @@ import numpy as np
 import sys
 import combo
 import math
+import ast
 
 
 class Tree:
     def __init__(self, get_reward, positions_order="reverse", max_flag=True, expand_children=1,
-                 data=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, ucb="mean", use_combo=False,
-                 combo_init_random=1, combo_step=1, combo_lvl=1):
+                 data=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, play_out_selection="best",
+                 ucb="mean", use_combo=False, combo_init_random=1, combo_step=1, combo_lvl=1, combo_play_out=10):
 
         if data is None:
             self.data=None
@@ -50,10 +51,17 @@ class Tree:
                 self.expand_children = expand_children
         self.result = Result()
         self.play_out = play_out
+        if play_out_selection == "best":
+            self.play_out_selection_mean = False
+        elif play_out_selection =="mean":
+            self.play_out_selection_mean = True
+        else:
+            sys.exit("Please set play_out_selection to either mean or best")
         self.use_combo = use_combo
         self.combo_init_random = combo_init_random
         self.combo_step = combo_step
         self.combo_lvl = combo_lvl
+        self.combo_play_out=combo_play_out
         if use_combo is True and data is None:
             sys.exit("Please set data to be able to use combo")
         if ucb == "best":
@@ -136,12 +144,42 @@ class Tree:
                         return -self.get_reward(sub_space[action[0]])
 
             policy = combo.search.discrete.policy(test_X=sub_space)
-            if self.play_out==1:
-                sys.exit("Play_out can not be 1 when use_combo is True")
+            if self.combo_play_out==1:
+                sys.exit("combo_play_out can not be 1 when use_combo is True")
 
-            res = policy.random_search(max_num_probes=self.combo_init_random, simulator=combo_simulater)
-            res = policy.bayes_search(max_num_probes=self.play_out-self.combo_init_random, simulator=combo_simulater
+            sub_space_scand_cand=[]
+            sub_space_scand_val=[]
+            for c in self.chkd_candidates.keys():
+                t=np.where(np.all(sub_space == ast.literal_eval(c), axis=1))[0]
+                if len(t) !=0:
+                    sub_space_scand_cand.append(t[0])
+                    if self.max_flag:
+                        sub_space_scand_val.append(self.chkd_candidates[c])
+                    else:
+                        sub_space_scand_val.append(-self.chkd_candidates[c])
+
+            sub_space_pair=zip(sub_space_scand_cand,sub_space_scand_val)
+            sub_space_pair.sort(key=lambda x: x[1],reverse=True)
+            if len(sub_space_pair) !=0:
+                if len(sub_space_pair) >= self.combo_play_out:
+                    for i in range(self.combo_play_out):
+                        policy.write(sub_space_pair[i][0],sub_space_pair[i][1])
+                else:
+                    for x in sub_space_pair:
+                        policy.write(x[0],x[1])
+                    if len(sub_space_pair) < self.combo_init_random:
+                        policy.random_search(max_num_probes=self.combo_init_random-len(sub_space_pair), simulator=combo_simulater)
+
+            else:
+                res = policy.random_search(max_num_probes=self.combo_init_random, simulator=combo_simulater)
+
+            trained=self.combo_init_random
+            if len(sub_space_pair) > self.combo_init_random:
+                trained = len(sub_space_pair)
+
+            res = policy.bayes_search(max_num_probes=self.combo_play_out-trained, simulator=combo_simulater
                                       , score='TS', interval=self.combo_step, num_rand_basis=5000)
+
             for i in range(len(res.chosed_actions[0:res.total_num_search])):
                 action=res.chosed_actions[i]
                 if self.max_flag:
@@ -188,10 +226,13 @@ class Tree:
                                 else:
                                     e = self.chkd_candidates[str(struct)]
                                 rewards.append(e)
-                            if self.max_flag:
-                                best_e = max(rewards)
+                            if self.play_out_selection_mean:
+                                best_e = np.mean(rewards)
                             else:
-                                best_e = min(rewards)
+                                if self.max_flag:
+                                    best_e = max(rewards)
+                                else:
+                                    best_e = min(rewards)
                             try_child.bck_prop(best_e)
                         else:
                             current.children[try_child.value] = None
@@ -204,10 +245,13 @@ class Tree:
                                 else:
                                     e = self.chkd_candidates[str(struct)]
                                 rewards.append(e)
-                            if self.max_flag:
-                                best_e = max(rewards)
+                            if self.play_out_selection_mean:
+                                best_e = np.mean(rewards)
                             else:
-                                best_e = min(rewards)
+                                if self.max_flag:
+                                    best_e = max(rewards)
+                                else:
+                                    best_e = min(rewards)
                             current.bck_prop(best_e)
                 if (current == prev_current) and (len(self.chkd_candidates) == prev_len):
                     adjust_val = (no_candidates-len(self.chkd_candidates))/no_candidates

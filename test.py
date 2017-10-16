@@ -38,6 +38,7 @@ X=np.array(X)
 ### expand_children : number of children to expand at each node. Default is "1". i.e. expand one child at a time.
 ### play_out: number of play outs et each node. Default is 1. Please note if you set the parameter use_combo to True,
     #play_out can not be 1
+## play_out_selection: when performing multiple playouts, best or mean is returned. Deafualt is best
 ### data: numpy ndarray representing the candidates space. Default is None. If specified the "no_positions",
     # "atom_types", and "atom_const" parameters will be ignored and there values will be taken from the data.
     # This is a slower option, not recommended unless there are complex constraints on the structures
@@ -46,13 +47,14 @@ X=np.array(X)
     # search. Default is "mean"
 ### use_combo: weather to use Bayesian optimisation or not in combination with Monte Carlo tree search.
     # COMBO package is used to engineer the palyout instead of random selection.
+### combo_play_out: total number of candidates to be examind by COMBO.
 ### combo_init_random: the initial random selection for Bayesian optimisation. Default is 1
 ### combo_step: the interval for Bayesian optimisation to perfrom hyperparameter optimization. Default is 1
 ### combo_lvl: the level of the tree at which start to apply Bayesian optimisation. Default is 1 (apply at all levels)
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=range(16),
-                max_flag=True,expand_children=2, play_out=100, data=X, ucb="mean", use_combo=True, combo_init_random=10,
-                 combo_step=10, combo_lvl=4)
+                max_flag=True,expand_children=2, play_out=5, play_out_selection="best", data=X, ucb="mean",
+                use_combo=True, combo_play_out=50, combo_init_random=10, combo_step=10, combo_lvl=5)
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
 res=myTree.search(display=True,no_candidates=1000)
@@ -102,5 +104,5 @@ del myTree
 
 ### Load the tree and continue the search
 myNewTree = mdts.load_tree('Tree_file')
-newTree_res=myNewTree.search(display=False, no_candidates=1200)
+newTree_res=myNewTree.search(display=True, no_candidates=1200)
 print newTree_res.checked_candidates_size
