@@ -144,8 +144,8 @@ class Tree:
                         return -self.get_reward(sub_space[action[0]])
 
             policy = combo.search.discrete.policy(test_X=sub_space)
-            if self.combo_play_out==1:
-                sys.exit("combo_play_out can not be 1 when use_combo is True")
+            if self.combo_play_out <= 1:
+                sys.exit("combo_play_out can not be less than 2 when use_combo is True")
 
             sub_space_scand_cand=[]
             sub_space_scand_val=[]
@@ -160,25 +160,32 @@ class Tree:
 
             sub_space_pair=zip(sub_space_scand_cand,sub_space_scand_val)
             sub_space_pair.sort(key=lambda x: x[1],reverse=True)
-            if len(sub_space_pair) !=0:
-                if len(sub_space_pair) >= self.combo_play_out:
-                    for i in range(self.combo_play_out):
-                        policy.write(sub_space_pair[i][0],sub_space_pair[i][1])
-                else:
-                    for x in sub_space_pair:
-                        policy.write(x[0],x[1])
-                    if len(sub_space_pair) < self.combo_init_random:
-                        policy.random_search(max_num_probes=self.combo_init_random-len(sub_space_pair), simulator=combo_simulater)
 
+            if len(sub_space_pair) >= self.combo_play_out:
+                for i in range(self.combo_play_out):
+                    policy.write(sub_space_pair[i][0],sub_space_pair[i][1])
+
+                trained=self.combo_play_out
             else:
-                res = policy.random_search(max_num_probes=self.combo_init_random, simulator=combo_simulater)
+                for x in sub_space_pair:
+                    policy.write(x[0],x[1])
+                trained=len(sub_space_pair)
+                if len(sub_space_pair) < self.combo_init_random:
+                    if sub_space.shape[0] >= self.combo_init_random:
+                        policy.random_search(max_num_probes=self.combo_init_random-len(sub_space_pair),
+                                             simulator=combo_simulater)
+                        trained=self.combo_init_random
+                    else:
+                        policy.random_search(max_num_probes=sub_space.shape[0] - len(sub_space_pair),
+                                             simulator=combo_simulater)
+                        trained=sub_space.shape[0]
 
-            trained=self.combo_init_random
-            if len(sub_space_pair) > self.combo_init_random:
-                trained = len(sub_space_pair)
-
-            res = policy.bayes_search(max_num_probes=self.combo_play_out-trained, simulator=combo_simulater
+            if sub_space.shape[0] >= self.combo_play_out:
+                res = policy.bayes_search(max_num_probes=self.combo_play_out-trained, simulator=combo_simulater
                                       , score='TS', interval=self.combo_step, num_rand_basis=5000)
+            else:
+                res = policy.bayes_search(max_num_probes=sub_space.shape[0] - trained, simulator=combo_simulater
+                                          , score='TS', interval=self.combo_step, num_rand_basis=5000)
 
             for i in range(len(res.chosed_actions[0:res.total_num_search])):
                 action=res.chosed_actions[i]
