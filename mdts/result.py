@@ -27,7 +27,7 @@ class Result:
             self.optimal_fx = max(self.fx)
             self.optimal_candidate = [k for (k, v) in self.checked_candidates_DS if v == self.optimal_fx]
             self.best_fx.append(self.fx[0])
-            for x in self.fx:
+            for x in self.fx[1:]:
                 if x > self.best_fx[-1]:
                     self.best_fx.append(x)
                 else:
@@ -36,7 +36,7 @@ class Result:
             self.optimal_fx = min(self.fx)
             self.optimal_candidate = [k for (k, v) in self.checked_candidates_DS if v == self.optimal_fx]
             self.best_fx.append(self.fx[0])
-            for x in self.fx:
+            for x in self.fx[1:]:
                 if x < self.best_fx[-1]:
                     self.best_fx.append(x)
                 else:

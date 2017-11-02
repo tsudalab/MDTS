@@ -11,7 +11,10 @@ DB_16=np.load('./DB_16.npy').item()
 def get_reward(struct):
     s = ''.join(str(x) for x in struct)
     if s in DB_16.keys():
-        cond = DB_16[s]
+        if s =='0000000011111111':
+            cond=False
+        else:
+            cond = DB_16[s]
     else:
         print "error"
     return cond
@@ -53,11 +56,11 @@ X=np.array(X)
 ### combo_lvl: the level of the tree at which start to apply Bayesian optimisation. Default is 1 (apply at all levels)
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=range(16),
-                max_flag=True,expand_children=2, play_out=5, play_out_selection="best", data=X, ucb="mean",
-                use_combo=True, combo_play_out=50, combo_init_random=10, combo_step=10, combo_lvl=5)
+                max_flag=True,expand_children=2, play_out=5, play_out_selection="best", space=None, candidate_pool_size=100,
+                 ucb="mean", use_combo=True, combo_play_out=20, combo_init_random=5, combo_step=5, combo_lvl=5)
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
-res=myTree.search(display=True,no_candidates=1000)
+res=myTree.search(display=True,no_candidates=500)
 
 ### Optimal reward
 print res.optimal_fx
@@ -104,5 +107,5 @@ del myTree
 
 ### Load the tree and continue the search
 myNewTree = mdts.load_tree('Tree_file')
-newTree_res=myNewTree.search(display=True, no_candidates=1200)
+newTree_res=myNewTree.search(display=True, no_candidates=600)
 print newTree_res.checked_candidates_size

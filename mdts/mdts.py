@@ -12,21 +12,25 @@ import ast
 
 class Tree:
     def __init__(self, get_reward, positions_order="reverse", max_flag=True, expand_children=1,
-                 data=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, play_out_selection="best",
+                 space=None, candidate_pool_size=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, play_out_selection="best",
                  ucb="mean", use_combo=False, combo_init_random=1, combo_step=1, combo_lvl=1, combo_play_out=10):
 
-        if data is None:
-            self.data=None
+        if space is None:
+            self.space=None
             if (no_positions is None) or (atom_types is None):
                 sys.exit("no_positions and atom_types should not be None")
             else:
                 self.no_positions = no_positions
                 self.atom_types = atom_types
                 self.atom_const = atom_const
+            if (use_combo) and (candidate_pool_size is None):
+                sys.exit("Please set the space or set candidate_pool_size for combo search")
+            else:
+                self.candidate_pool_size = candidate_pool_size
         else:
-            self.data = data.copy()
-            self.no_positions = data.shape[1]
-            self.atom_types = np.unique(data)
+            self.space = space.copy()
+            self.no_positions = space.shape[1]
+            self.atom_types = np.unique(space)
         if positions_order == "direct":
             self.positions_order = range(self.no_positions)
         elif positions_order == "reverse":
@@ -62,8 +66,8 @@ class Tree:
         self.combo_step = combo_step
         self.combo_lvl = combo_lvl
         self.combo_play_out=combo_play_out
-        if use_combo is True and data is None:
-            sys.exit("Please set data to be able to use combo")
+        # if use_combo is True and space is None:
+        #     sys.exit("Please set space to be able to use combo")
         if ucb == "best":
             self.ucb_mean = False
         elif ucb =="mean":
@@ -71,22 +75,15 @@ class Tree:
         else:
             sys.exit("Please set ucb to either mean or best")
 
-    def _simulate(self, struct, lvl):
-        if self.data is None:
-            return self._simulate_const(struct)
-        elif (self.use_combo) and (lvl >= self.combo_lvl):
-            return self._simulate_combo(struct)
-        else:
-            return self._simulate_matrix(struct)
 
-    def _simulate_const(self, struct):
+    def _enumerate_cand(self, struct, size):
         structure = struct[:]
         chosen_candidates = []
         if self.atom_const is not None:
             for value_id in range(len(self.atom_types)):
                 if structure.count(self.atom_types[value_id]) > self.atom_const[value_id]:
                     return chosen_candidates
-            for pout in range(self.play_out):
+            for pout in range(size):
                 cand = structure[:]
                 for value_id in range(len(self.atom_types)):
                     diff = self.atom_const[value_id] - cand.count(self.atom_types[value_id])
@@ -97,7 +94,7 @@ class Tree:
                             cand[pos] = self.atom_types[value_id]
                 chosen_candidates.append(cand)
         else:
-            for pout in range(self.play_out):
+            for pout in range(size):
                 cand = structure[:]
                 avl_pos = [i for i, x in enumerate(cand) if x is None]
                 for pos in avl_pos:
@@ -105,12 +102,26 @@ class Tree:
                 chosen_candidates.append(cand)
         return chosen_candidates
 
+    def _simulate(self, struct, lvl):
+        if self.space is None:
+            if self.use_combo is False:
+                return self._enumerate_cand(struct,self.play_out)
+            else:
+                my_space=self._enumerate_cand(struct,self.candidate_pool_size)
+                return self._simulate_combo(struct, np.array(my_space))
+        else:
+            if (self.use_combo) and (lvl >= self.combo_lvl):
+                return self._simulate_combo(struct)
+            else:
+                return self._simulate_matrix(struct)
+
+
     def _simulate_matrix(self, struct):
         structure = struct[:]
         chosen_candidates = []
         filled_pos = [i for i, x in enumerate(structure) if x is not None]
         filled_values = [x for i, x in enumerate(structure) if x is not None]
-        sub_data = self.data[:, filled_pos]
+        sub_data = self.space[:, filled_pos]
         avl_candidates_idx = np.where(np.all(sub_data == filled_values, axis=1))[0]
         if len(avl_candidates_idx) != 0:
             if self.play_out <= len(avl_candidates_idx):
@@ -118,18 +129,22 @@ class Tree:
             else:
                 chosen_idxs = np.random.choice(avl_candidates_idx, len(avl_candidates_idx))
             for idx in chosen_idxs:
-                chosen_candidates.append(list(self.data[idx]))
+                chosen_candidates.append(list(self.space[idx]))
         return chosen_candidates
 
 
-    def _simulate_combo(self, struct):
-        structure = struct[:]
+    def _simulate_combo(self, struct, my_space=None):
         chosen_candidates = []
-        filled_pos = [i for i, x in enumerate(structure) if x is not None]
-        filled_values = [x for i, x in enumerate(structure) if x is not None]
-        sub_data = self.data[:, filled_pos]
-        avl_candidates_idx = np.where(np.all(sub_data == filled_values, axis=1))[0]
-        sub_space=self.data[avl_candidates_idx]
+        if my_space is None:
+            structure = struct[:]
+            filled_pos = [i for i, x in enumerate(structure) if x is not None]
+            filled_values = [x for i, x in enumerate(structure) if x is not None]
+            sub_data = self.space[:, filled_pos]
+            avl_candidates_idx = np.where(np.all(sub_data == filled_values, axis=1))[0]
+            sub_space=self.space[avl_candidates_idx]
+        else:
+            sub_space=my_space
+
         if sub_space.shape[0] !=0:
             def combo_simulater(action):
                 if str(list(sub_space[action[0]])) in self.chkd_candidates.keys():
@@ -195,8 +210,8 @@ class Tree:
                     e=-res.fx[i]
                 if str(list(sub_space[action])) not in self.chkd_candidates.keys():
                     self.chkd_candidates[str(list(sub_space[action]))] = e
-                    #action_origin_idx = np.where(np.all(self.data== sub_space[action], axis=1))[0]
-                    #self.data = np.delete(self.data,action_origin_idx[0],axis=0)
+                    #action_origin_idx = np.where(np.all(self.space== sub_space[action], axis=1))[0]
+                    #self.space = np.delete(self.space,action_origin_idx[0],axis=0)
                 chosen_candidates.append(list(sub_space[action]))
 
         return chosen_candidates
@@ -224,15 +239,18 @@ class Tree:
                     try_children = current.expand(position, self.expand_children)
                     for try_child in try_children:
                         all_struct = self._simulate(try_child.struct,try_child.level)
-                        if len(all_struct) != 0:
-                            rewards = []
-                            for struct in all_struct:
-                                if str(struct) not in self.chkd_candidates.keys():
-                                    e = self.get_reward(struct)
+                        #if len(all_struct) != 0:
+                        rewards = []
+                        for struct in all_struct:
+                            if str(struct) not in self.chkd_candidates.keys():
+                                e = self.get_reward(struct)
+                                if e is not False:
                                     self.chkd_candidates[str(struct)] = e
-                                else:
-                                    e = self.chkd_candidates[str(struct)]
-                                rewards.append(e)
+                            else:
+                                e = self.chkd_candidates[str(struct)]
+                            rewards.append(e)
+                        rewards[:] = [x for x in rewards if x is not False]
+                        if len(rewards)!=0:
                             if self.play_out_selection_mean:
                                 best_e = np.mean(rewards)
                             else:
