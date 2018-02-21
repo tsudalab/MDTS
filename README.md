@@ -9,6 +9,9 @@ numpy >=1.12.x
 COMBO 
 https://github.com/tsudalab/combo
 
+# Documentation
+Complete documentation is [here](http://mdts.readthedocs.io/en/latest/)
+
 # Installation
 Download or clone the github repository, e.g.
 git clone https://github.com/tsudalab/MDTS
