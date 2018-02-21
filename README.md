@@ -25,4 +25,5 @@ Please refer to test.py file for usage
 If you use this package, please cite us:
 
 Thaer M. Dieb, Shenghong Ju, Kazuki Yoshizoe, Zhufeng Hou, Junichiro Shiomi and Koji Tsuda,
-MDTS: Automatic Complex Materials Design using Monte Carlo Tree Search
+MDTS: Automatic Complex Materials Design using Monte Carlo Tree Search,
+Science and Technology of Advanced Materials, Vol. 18, Iss. 1, 2017
