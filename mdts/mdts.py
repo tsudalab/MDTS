@@ -29,8 +29,10 @@ class Tree:
                 self.candidate_pool_size = candidate_pool_size
         else:
             self.space = space.copy()
+            self.one_hot_space=self.one_hot_encode(self.space)
             self.no_positions = space.shape[1]
             self.atom_types = np.unique(space)
+
         if positions_order == "direct":
             self.positions_order = range(self.no_positions)
         elif positions_order == "reverse":
@@ -41,11 +43,13 @@ class Tree:
             self.positions_order = positions_order
         else:
             sys.exit("Please specify positions order")
+
         self.chkd_candidates = collections.OrderedDict()
         self.max_flag = max_flag
         self.root = Node(value='R', children_values=self.atom_types, struct=[None]*self.no_positions)
         self.acc_threshold = 0.1
         self.get_reward = get_reward
+
         if expand_children == "all":
             self.expand_children = len(self.atom_types)
         elif isinstance(expand_children, int):
@@ -61,6 +65,7 @@ class Tree:
             self.play_out_selection_mean = True
         else:
             sys.exit("Please set play_out_selection to either mean or best")
+
         self.use_combo = use_combo
         self.combo_init_random = combo_init_random
         self.combo_step = combo_step
@@ -68,6 +73,7 @@ class Tree:
         self.combo_play_out=combo_play_out
         # if use_combo is True and space is None:
         #     sys.exit("Please set space to be able to use combo")
+
         if ucb == "best":
             self.ucb_mean = False
         elif ucb =="mean":
@@ -101,6 +107,15 @@ class Tree:
                     cand[pos] = np.random.choice(self.atom_types)
                 chosen_candidates.append(cand)
         return chosen_candidates
+
+    def one_hot_encode(self,space):
+        no_atoms=len(self.atom_types)
+        new_space = np.empty((space.shape[0], space.shape[1], no_atoms), dtype=int)
+        for at_ind, at in enumerate(self.atom_types):
+            one_hot = np.zeros(no_atoms, dtype=int)
+            one_hot[at_ind] = 1
+            new_space[space == at] = one_hot
+        return new_space.reshape(space.shape[0],space.shape[1]*no_atoms)
 
     def _simulate(self, struct, lvl):
         if self.space is None:
@@ -142,8 +157,11 @@ class Tree:
             sub_data = self.space[:, filled_pos]
             avl_candidates_idx = np.where(np.all(sub_data == filled_values, axis=1))[0]
             sub_space=self.space[avl_candidates_idx]
+            one_hot_sub_space=self.one_hot_space[avl_candidates_idx]
         else:
             sub_space=my_space
+            one_hot_sub_space=self.one_hot_encode(my_space)
+
 
         if sub_space.shape[0] !=0:
             def combo_simulater(action):
@@ -158,7 +176,8 @@ class Tree:
                     else:
                         return -self.get_reward(sub_space[action[0]])
 
-            policy = combo.search.discrete.policy(test_X=sub_space)
+            policy = combo.search.discrete.policy(test_X=one_hot_sub_space)
+
             if self.combo_play_out <= 1:
                 sys.exit("combo_play_out can not be less than 2 when use_combo is True")
 
@@ -196,11 +215,11 @@ class Tree:
                         trained=sub_space.shape[0]
 
             if sub_space.shape[0] >= self.combo_play_out:
-                res = policy.bayes_search(max_num_probes=self.combo_play_out-trained, simulator=combo_simulater
-                                      , score='TS', interval=self.combo_step, num_rand_basis=5000)
+                res = policy.bayes_search(max_num_probes=self.combo_play_out-trained, simulator=combo_simulater,
+                                          score='TS', interval=self.combo_step, num_rand_basis=5000)
             else:
-                res = policy.bayes_search(max_num_probes=sub_space.shape[0] - trained, simulator=combo_simulater
-                                          , score='TS', interval=self.combo_step, num_rand_basis=5000)
+                res = policy.bayes_search(max_num_probes=sub_space.shape[0] - trained, simulator=combo_simulater,
+                                          score='TS', interval=self.combo_step, num_rand_basis=5000)
 
             for i in range(len(res.chosed_actions[0:res.total_num_search])):
                 action=res.chosed_actions[i]

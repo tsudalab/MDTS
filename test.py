@@ -11,24 +11,11 @@ DB_16=np.load('./DB_16.npy').item()
 def get_reward(struct):
     s = ''.join(str(x) for x in struct)
     if s in DB_16.keys():
-        if s =='0000000011111111':
-            cond=False
-        else:
-            cond = DB_16[s]
+        cond = DB_16[s]
     else:
         print "error"
     return cond
 
-### X is the matrix of all possible candidates. The candidate space needs to be defined if you want to use
-  # Bayesian optimization within MDTS
-X=[]
-a=np.asarray(range(16))
-for cand in itertools.combinations(a,8):
-    ls = np.zeros(16,dtype=int)
-    for i in cand:
-        ls[i]=1
-    X.append(ls)
-X=np.array(X)
 
 ### Initialize the tree with the following parameters
 ### no_positions: number of positions in each structure. For example, 16 atoms.
@@ -42,7 +29,7 @@ X=np.array(X)
 ### play_out: number of play outs et each node. Default is 1. Please note if you set the parameter use_combo to True,
     #play_out can not be 1
 ## play_out_selection: when performing multiple playouts, best or mean is returned. Deafualt is best
-### data: numpy ndarray representing the candidates space. Default is None. If specified the "no_positions",
+### space: numpy ndarray representing the candidates space. Default is None. If specified the "no_positions",
     # "atom_types", and "atom_const" parameters will be ignored and there values will be taken from the data.
     # This is a slower option, not recommended unless there are complex constraints on the structures
     # data needs to be assigned if you want to use the option use_combo=True
