@@ -34,24 +34,24 @@ class Node:
             c = ((math.sqrt(2)/4)*(self.max_range-self.min_range))*self.adjust_val
             u_scores = {}
             if max_flag:
-                for child in self.children.itervalues():
+                for child in iter(self.children.values()):
                     if child is not None:
                         if ucb_mean:
                             u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) /
                                                                                        child.v))))
                         else:
                             u_scores[child.value] = child.max_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
-                max_idxs = [i for i, x in u_scores.iteritems() if x == max(u_scores.itervalues())]
+                max_idxs = [i for i, x in iter(u_scores.items()) if x == max(iter(u_scores.values()))]
                 idx = np.random.choice(max_idxs)
             else:
-                for child in self.children.itervalues():
+                for child in iter(self.children.values()):
                     if child is not None:
                         if ucb_mean:
                             u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) /
                                                                                        child.v))))
                         else:
                             u_scores[child.value] = child.min_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
-                min_idxs = [i for i, x in u_scores.iteritems() if x == min(u_scores.itervalues())]
+                min_idxs = [i for i, x in iter(u_scores.items()) if x == min(iter(u_scores.values()))]
                 idx = np.random.choice(min_idxs)
             return self.children[idx].select(max_flag, ucb_mean)
         else:
@@ -95,7 +95,7 @@ class Node:
         visits = self.v
         depth = self.level
         if self.has_children():
-            for child in self.children.itervalues():
+            for child in iter(self.children.values()):
                 if child is not None:
                     x, y, z = child.get_info()
                     nodes +=x

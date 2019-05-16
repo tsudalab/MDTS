@@ -1,6 +1,6 @@
 from __future__ import division
-from node import Node
-from result import Result
+from .node import Node
+from .result import Result
 import collections
 import random
 import numpy as np
@@ -34,15 +34,15 @@ class Tree:
             self.atom_types = np.unique(space)
 
         if positions_order == "direct":
-            self.positions_order = range(self.no_positions)
+            self.positions_order = list(range(self.no_positions))
         elif positions_order == "reverse":
-            self.positions_order = range(self.no_positions)[::-1]
+            self.positions_order = list(range(self.no_positions))[::-1]
         elif positions_order == "shuffle":
-            self.positions_order = random.sample(range(self.no_positions), self.no_positions)
+            self.positions_order = random.sample(list(range(self.no_positions)), self.no_positions)
         elif isinstance(positions_order, list):
             self.positions_order = positions_order
         else:
-            sys.exit("Please specify positions order")
+            sys.exit("Please specify positions order as a list")
 
         self.chkd_candidates = collections.OrderedDict()
         self.max_flag = max_flag
@@ -192,7 +192,7 @@ class Tree:
                     else:
                         sub_space_scand_val.append(-self.chkd_candidates[c])
 
-            sub_space_pair=zip(sub_space_scand_cand,sub_space_scand_val)
+            sub_space_pair=list(zip(sub_space_scand_cand,sub_space_scand_val))
             sub_space_pair.sort(key=lambda x: x[1],reverse=True)
 
             if len(sub_space_pair) >= self.combo_play_out:
@@ -305,12 +305,12 @@ class Tree:
                 prev_len = len(self.chkd_candidates)
                 prev_current = current
                 if display:
-                    print "round ", round_no
-                    print "checked candidates = ", len(self.chkd_candidates)
+                    print ("round ", round_no)
+                    print ("checked candidates = ", len(self.chkd_candidates))
                     if self.max_flag:
-                        print "current best = ", max(self.chkd_candidates.itervalues())
+                        print ("current best = ", max(iter(self.chkd_candidates.values())))
                     else:
-                        print "current best = ", min(self.chkd_candidates.itervalues())
+                        print ("current best = ", min(iter(self.chkd_candidates.values())))
                 round_no += 1
         self.result.format(no_candidates=no_candidates, chkd_candidates=self.chkd_candidates, max_flag=self.max_flag)
         self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info()

@@ -13,7 +13,7 @@ def get_reward(struct):
     if s in DB_16.keys():
         cond = DB_16[s]
     else:
-        print "error"
+        print ("error")
     return cond
 
 
@@ -42,7 +42,7 @@ def get_reward(struct):
 ### combo_step: the interval for Bayesian optimisation to perfrom hyperparameter optimization. Default is 1
 ### combo_lvl: the level of the tree at which start to apply Bayesian optimisation. Default is 1 (apply at all levels)
 
-myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=range(16),
+myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=list(range(16)),
                 max_flag=True,expand_children=2, play_out=5, play_out_selection="best", space=None, candidate_pool_size=100,
                  ucb="mean", use_combo=True, combo_play_out=20, combo_init_random=5, combo_step=5, combo_lvl=5)
 
@@ -50,34 +50,34 @@ myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward
 res=myTree.search(display=True,no_candidates=500)
 
 ### Optimal reward
-print res.optimal_fx
+print (res.optimal_fx)
 
 ### List of optimal candidates
-print res.optimal_candidate
+print (res.optimal_candidate)
 
 ### List of tuples with the candidates examined and their rewards
-print res.checked_candidates_DS
+print (res.checked_candidates_DS)
 
 ### Number of examined candidates
-print res.checked_candidates_size
+print (res.checked_candidates_size)
 
 ### List of chosen candidates in order
-print res.checked_candidates
+print (res.checked_candidates)
 
 ### List of simulated candidates rewards in order
-print res.fx
+print (res.fx)
 
 ### List of current best reward
-print res.best_fx
+print (res.best_fx)
 
 ### Maximum depth reached
-print res.max_depth_reached
+print (res.max_depth_reached)
 
 ### Number of nodes constructed
-print res.no_nodes
+print (res.no_nodes)
 
 ### Average visit per node
-print res.avg_node_visit
+print (res.avg_node_visit)
 
 ### Save results
 res.save('results.npz')
@@ -85,7 +85,7 @@ res.save('results.npz')
 ### Load results
 new_res=mdts.Result()
 new_res.load('results.npz')
-print new_res.optimal_fx
+print (new_res.optimal_fx)
 
 
 ### The tree can be saved
@@ -95,4 +95,4 @@ del myTree
 ### Load the tree and continue the search
 myNewTree = mdts.load_tree('Tree_file')
 newTree_res=myNewTree.search(display=True, no_candidates=600)
-print newTree_res.checked_candidates_size
+print (newTree_res.checked_candidates_size)
