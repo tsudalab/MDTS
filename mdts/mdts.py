@@ -5,7 +5,7 @@ import collections
 import math
 import random
 import sys
-#from policygradient
+from .policygradient import *
 import numpy as np
 
 import combo
