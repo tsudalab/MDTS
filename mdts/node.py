@@ -241,10 +241,10 @@ class Node:
                                              replace=False)
         else:
             if skip_chosen:  # allow for selection of selected nodes
-                chosen_values, prob = policygradient.choose_action_skip(
+                chosen_values, prob = choose_action_skip(
                     avl_child_values, state, no_chosen_values)
             else:  # not allow for selection of selected nodes
-                chosen_values, prob = policygradient.choose_action(
+                chosen_values, prob = choose_action(
                     avl_child_values, state, no_chosen_values)
 
         return chosen_values, prob

@@ -1,11 +1,12 @@
 from __future__ import division
 
+from .policygradient import *
 import ast
 import collections
 import math
 import random
 import sys
-from .policygradient import *
+
 import numpy as np
 
 import combo
@@ -532,9 +533,9 @@ class Tree:
                             records.append(record)
                         "The training strategy, which is task dependent"
                         if 1 < round_no <= 100 and round_no % 2 == 0:
-                            policygradient.train(records[-2:-1])
+                            train(records[-2:-1])
                         elif round_no % 10 == 0:
-                            policygradient.train(records[-20:-1])
+                            train(records[-20:-1])
                             
 
                 if (current == prev_current) and (len(
