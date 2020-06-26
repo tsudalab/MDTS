@@ -22,7 +22,7 @@ python setup.py install
 
 Please refer to test.py file for usage
 
-#Contact
+# Contact
 Sae Dieb: dieb.sae@gmail.com
 
 If you use this package, please cite us:
