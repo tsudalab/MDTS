@@ -1,15 +1,15 @@
 from __future__ import division
 
-from .policygradient import *
 import ast
 import collections
 import math
 import random
 import sys
-
+from .policygradient import*
 import numpy as np
 
 import combo
+
 from .node import Node
 from .result import Result
 import pickle
@@ -111,25 +111,25 @@ class Tree:
         else:
             sys.exit("Please set ucb to either mean or best")
 
-    def _enumerate_cand(self, struct, size): 
-        structure = struct[:]  
+    def _enumerate_cand(self, struct, size):
+        structure = struct[:]
         chosen_candidates = []
-        if self.atom_const is not None:  
+        if self.atom_const is not None:
             for value_id in range(len(self.atom_types)):
-                if structure.count(self.atom_types[value_id])  > self.atom_const[value_id]:
-                    return chosen_candidates  
+                if structure.count(self.atom_types[value_id]) > self.atom_const[value_id]:
+                    return chosen_candidates
             for pout in range(size):
                 cand = structure[:]
-                for value_id in range(len(self.atom_types)):  
-                    diff = self.atom_const[value_id] - cand.count(self.atom_types[value_id])
-                    if diff != 0:  
-                        avl_pos = [i for i, x in enumerate(cand)
-                                   if x is None]  
-                        to_fill_pos = np.random.choice(
-                            avl_pos, diff,
-                            replace=False)  
+                for value_id in range(len(self.atom_types)):
+                    diff = self.atom_const[value_id] - cand.count(
+                        self.atom_types[value_id])
+                    if diff != 0:
+                        avl_pos = [i for i, x in enumerate(cand) if x is None]
+                        to_fill_pos = np.random.choice(avl_pos,
+                                                       diff,
+                                                       replace=False)
                         for pos in to_fill_pos:
-                            cand[pos] = self.atom_types[value_id]  
+                            cand[pos] = self.atom_types[value_id]
                 chosen_candidates.append(cand)
         else:
             for pout in range(size):
@@ -140,18 +140,17 @@ class Tree:
                 chosen_candidates.append(cand)
         return chosen_candidates
 
-    def one_hot_encode(self, space):  
-        no_atoms = len(self.atom_types)  
-        new_space = np.empty(
-            (space.shape[0], space.shape[1], no_atoms),
-            dtype=int)  
-        for at_ind, at in enumerate(self.atom_types):  
-            one_hot = np.zeros(no_atoms, dtype=int)  
+    def one_hot_encode(self, space):
+        no_atoms = len(self.atom_types)
+        new_space = np.empty((space.shape[0], space.shape[1], no_atoms),
+                             dtype=int)
+        for at_ind, at in enumerate(self.atom_types):
+            one_hot = np.zeros(no_atoms, dtype=int)
             one_hot[at_ind] = 1
             new_space[space == at] = one_hot
         return new_space.reshape(space.shape[0], space.shape[1] * no_atoms)
 
-    def _simulate(self, struct, lvl):  
+    def _simulate(self, struct, lvl):
         if self.space is None:
             if self.use_combo is False:
                 return self._enumerate_cand(struct, self.play_out)
@@ -162,7 +161,7 @@ class Tree:
         else:
             if (self.use_combo) and (lvl >= self.combo_lvl):
                 return self._simulate_combo(struct)
-            else:  
+            else:
                 return self._simulate_matrix(struct)
 
     def _simulate_matrix(self, struct):
@@ -292,15 +291,18 @@ class Tree:
 
         return chosen_candidates
 
-
-    def get_state(self,current): # get the state of each node
+    def get_state(self, current):  # get the state of each node
         state_raw = []
         state_raw.extend([current.level for i in range(3)])
         if current.parent is not None:
             if type(current.parent.value) == str:
-                state_raw.extend([infor3 for infor3 in [-1,current.parent.level]])
+                state_raw.extend(
+                    [infor3 for infor3 in [-1, current.parent.level]])
             else:
-                state_raw.extend([infor3 for infor3 in [current.parent.value,current.parent.level]])
+                state_raw.extend([
+                    infor3
+                    for infor3 in [current.parent.value, current.parent.level]
+                ])
         else:
             state_raw.extend([-1.5 for i in range(2)])
         if type(current.value) == str:
@@ -308,21 +310,22 @@ class Tree:
         else:
             state_raw.extend([current.value for i in range(3)])
         state = preprocessing.scale(state_raw)**2
-        return 10*np.array(state).ravel()
+        return 10 * np.array(state).ravel()
 
-
-    def get_records(self,current,child,choose_children,ucb_mean): # get records after simulations for training
+    def get_records(self, current, child, choose_children,
+                    ucb_mean):  # get records after simulations for training
         state = self.get_state(current)
-        print("state = ",state)
-        ucb = child.cal_ucb(child,ucb_mean)
-        return ucb,np.array(state).ravel(),choose_children
+        print("state = ", state)
+        ucb = child.cal_ucb(child, ucb_mean)
+        return ucb, np.array(state).ravel(), choose_children
 
-
-    def prob_select(self,current_row,max_prob_index,round_no): # select node from policy gradient
-        limit = 40; chosen_num = 10
+    def prob_select(self, current_row, max_prob_index,
+                    round_no):  # select node from policy gradient
+        limit = 40
+        chosen_num = 10
         if round_no >= 2 and current_row in max_prob_index.keys():
             chosen_index = list(set([index for index in max_prob_index[current_row].keys() \
-                if max_prob_index[current_row][index]>=limit]))  
+                if max_prob_index[current_row][index]>=limit]))
         else:
             chosen_index = []
         print("chosen_index:", chosen_index)
@@ -330,24 +333,24 @@ class Tree:
             position = self.positions_order[current_row.level]
             for index_indi in chosen_index:
                 if index_indi not in current_row.children:
-                    current_row.expand(chosen_index,position)
+                    current_row.expand(chosen_index, position)
             current = current_row.children[np.random.choice(chosen_index)]
             if current.has_children():
-                return self.prob_select(current,max_prob_index,round_no)
+                return self.prob_select(current, max_prob_index, round_no)
             else:
                 return current
         else:
-            return current_row 
+            return current_row
 
-    def search(self, no_candidates=None, display=True): #original MCTS search
+    def search(self, no_candidates=None, display=True):  #original MCTS search
         prev_len = 0
         prev_current = None
         round_no = 1
-        if no_candidates is None :
+        if no_candidates is None:
             sys.exit("Please specify no_candidates")
         else:
             while len(self.chkd_candidates) < no_candidates:
-                current = self.root.select(self.max_flag, self.ucb_mean)
+                current = self.root.select_origin(self.max_flag, self.ucb_mean)
                 if current.level == self.no_positions:
                     struct = current.struct[:]
                     if str(struct) not in self.chkd_candidates.keys():
@@ -358,9 +361,11 @@ class Tree:
                     current.bck_prop(e)
                 else:
                     position = self.positions_order[current.level]
-                    try_children = current.expand(position, self.expand_children)
+                    try_children = current.expand_origin(
+                        position, self.expand_children)
                     for try_child in try_children:
-                        all_struct = self._simulate(try_child.struct,try_child.level)
+                        all_struct = self._simulate(try_child.struct,
+                                                    try_child.level)
                         #if len(all_struct) != 0:
                         rewards = []
                         for struct in all_struct:
@@ -372,129 +377,6 @@ class Tree:
                                 e = self.chkd_candidates[str(struct)]
                             rewards.append(e)
                         rewards[:] = [x for x in rewards if x is not False]
-                        if len(rewards)!=0:
-                            if self.play_out_selection_mean:
-                                best_e = np.mean(rewards)
-                            else:
-                                if self.max_flag:
-                                    best_e = max(rewards)
-                                else:
-                                    best_e = min(rewards)
-                            try_child.bck_prop(best_e)
-                        else:
-                            current.children[try_child.value] = None
-                            all_struct = self._simulate(current.struct,current.level)
-                            rewards = []
-                            for struct in all_struct:
-                                if str(struct) not in self.chkd_candidates.keys():
-                                    e = self.get_reward(struct)
-                                    self.chkd_candidates[str(struct)] = e
-                                else:
-                                    e = self.chkd_candidates[str(struct)]
-                                rewards.append(e)
-                            if self.play_out_selection_mean:
-                                best_e = np.mean(rewards)
-                            else:
-                                if self.max_flag:
-                                    best_e = max(rewards)
-                                else:
-                                    best_e = min(rewards)
-                            current.bck_prop(best_e)
-                if (current == prev_current) and (len(self.chkd_candidates) == prev_len):
-                    adjust_val = (no_candidates-len(self.chkd_candidates))/no_candidates
-                    if adjust_val < self.acc_threshold:
-                        adjust_val = self.acc_threshold
-                    current.adjust_c(adjust_val)
-                prev_len = len(self.chkd_candidates)
-                prev_current = current
-                if display:
-                    print ("round ", round_no)
-                    print ("checked candidates = ", len(self.chkd_candidates))
-                    if self.max_flag:
-                        print ("current best = ", max(iter(self.chkd_candidates.values())))
-                    else:
-                        print ("current best = ", min(iter(self.chkd_candidates.values())))
-                round_no += 1
-        self.result.format(no_candidates=no_candidates, chkd_candidates=self.chkd_candidates, max_flag=self.max_flag)
-        self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info()
-        self.result.avg_node_visit = visits / self.result.no_nodes
-        return self.result
-
-    def search_PG(self, no_candidates=None, display=True, simple = True):# MCTS search with PG 
-        test = []
-        prev_len = 0
-        prev_current = None
-        round_no = 1
-        records = [];pre_max_indexs = []
-        prob_record = [];max_prob_index = {}
-        max_num = 2
-        if no_candidates is None:
-            sys.exit("Please specify no_candidates")
-        else:
-            while len(self.chkd_candidates) < no_candidates:
-                current_row = self.root.select_origin(self.max_flag, self.ucb_mean)
-                print("current_row.level = ",current_row.level)    
-                if simple:# apply the PG simple strategy by default
-                    if (round_no - 1) % 10 == 0:
-                        state = self.get_state(current_row)
-                        choose_children,prob = current_row.choose_expand(self.expand_children,state.ravel(),False,False)
-                        for choose_child in choose_children:
-                            print("choose_child..................",choose_child)
-                            if choose_child in current_row.children.keys():
-                                current = current_row.children[choose_child]
-                            else:
-                                current = current_row
-                    else:
-                        current = current_row
-                else:
-                    current = self.prob_select(current_row,max_prob_index,round_no)
-                print("current.level = ",current.level)
-                print("current",current)
-                if current.level == self.no_positions:  
-                    struct = current.struct[:]  
-                    if str(struct) not in self.chkd_candidates.keys(
-                    ):  
-                        e = self.get_reward(struct)  
-                        self.chkd_candidates[str(struct)] = e                                                
-                    else:  
-                        e = self.chkd_candidates[str(struct)]
-                    current.bck_prop(e)  
-                else:  
-                    position = self.positions_order[current.level]  
-                    state = self.get_state(current)
-                    
-                    choose_children,prob = current.choose_expand(self.expand_children,state.ravel(),False,True)
-                    
-                    if current not in max_prob_index.keys():
-                        max_prob_index[current] = {}
-                    max_indexs = [list(prob).index(i) for i in heapq.nlargest(max_num, prob)]
-                    same_val = list(set(max_indexs) & set(pre_max_indexs))
-                    print("max_indexs = ",max_indexs)
-                    print("pre_max_indexs = ",pre_max_indexs)
-                    if same_val:
-                        for i in same_val:
-                            if i not in max_prob_index[current].keys():
-                                max_prob_index[current][i] = 0
-                            else:
-                                max_prob_index[current][i] += 1
-                    try_children = current.expand(choose_children,
-                                                position)
-                                       
-                    for try_child in try_children:#each try_child is a node class
-                        print("try_child level...............",try_child.level)
-
-                        all_struct = self._simulate(try_child.struct,
-                                                    try_child.level)
-                        rewards = []
-                        for struct in all_struct:
-                            if str(struct) not in self.chkd_candidates.keys():#if this node has not been simulated
-                                e = self.get_reward(struct)
-                                if e is not False:
-                                    self.chkd_candidates[str(struct)] = e#record e
-                            else:
-                                e = self.chkd_candidates[str(struct)]
-                            rewards.append(e)#record the reward of each structure
-                        rewards[:] = [x for x in rewards if x is not False]#record all the rewards
                         if len(rewards) != 0:
                             if self.play_out_selection_mean:
                                 best_e = np.mean(rewards)
@@ -504,10 +386,6 @@ class Tree:
                                 else:
                                     best_e = min(rewards)
                             try_child.bck_prop(best_e)
-                            record = list(self.get_records(current,try_child,choose_children,self.ucb_mean))
-                            records.append(record)
-
-                            print("ucb = ",record[0])
                         else:
                             current.children[try_child.value] = None
                             all_struct = self._simulate(
@@ -529,14 +407,171 @@ class Tree:
                                 else:
                                     best_e = min(rewards)
                             current.bck_prop(best_e)
-                            record = list(self.get_records(current,current.child,choose_children,self.ucb_mean))
+                if (current == prev_current) and (len(
+                        self.chkd_candidates) == prev_len):
+                    adjust_val = (no_candidates -
+                                  len(self.chkd_candidates)) / no_candidates
+                    if adjust_val < self.acc_threshold:
+                        adjust_val = self.acc_threshold
+                    current.adjust_c(adjust_val)
+                prev_len = len(self.chkd_candidates)
+                prev_current = current
+                if display:
+                    print("round ", round_no)
+                    print("checked candidates = ", len(self.chkd_candidates))
+                    if self.max_flag:
+                        print("current best = ",
+                              max(iter(self.chkd_candidates.values())))
+                    else:
+                        print("current best = ",
+                              min(iter(self.chkd_candidates.values())))
+                if max(iter(self.chkd_candidates.values())) > 0.76:
+                    break
+                round_no += 1
+        self.result.format(no_candidates=no_candidates,
+                           chkd_candidates=self.chkd_candidates,
+                           max_flag=self.max_flag)
+        self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info(
+        )
+        self.result.avg_node_visit = visits / self.result.no_nodes
+        return self.result
+
+    def search_PG(self, no_candidates=None, display=True,
+                  simple=True):  # MCTS search with PG
+        test = []
+        prev_len = 0
+        prev_current = None
+        round_no = 1
+        records = []
+        pre_max_indexs = []
+        prob_record = []
+        max_prob_index = {}
+        max_num = 2
+        if no_candidates is None:
+            sys.exit("Please specify no_candidates")
+        else:
+            while len(self.chkd_candidates) < no_candidates:
+                current_row = self.root.select_origin(self.max_flag,
+                                                      self.ucb_mean)
+                print("current_row.level = ", current_row.level)
+                if simple:  # apply the PG simple strategy by default
+                    if (round_no - 1) % 10 == 0:
+                        state = self.get_state(current_row)
+                        choose_children, prob = current_row.choose_expand(
+                            self.expand_children, state.ravel(), False, False)
+                        for choose_child in choose_children:
+                            print("choose_child..................",
+                                  choose_child)
+                            if choose_child in current_row.children.keys():
+                                current = current_row.children[choose_child]
+                            else:
+                                current = current_row
+                    else:
+                        current = current_row
+                else:
+                    current = self.prob_select(current_row, max_prob_index,
+                                               round_no)
+                print("current.level = ", current.level)
+                print("current", current)
+                if current.level == self.no_positions:
+                    struct = current.struct[:]
+                    if str(struct) not in self.chkd_candidates.keys():
+                        e = self.get_reward(struct)
+                        self.chkd_candidates[str(struct)] = e
+                    else:
+                        e = self.chkd_candidates[str(struct)]
+                    current.bck_prop(e)
+                else:
+                    position = self.positions_order[current.level]
+                    state = self.get_state(current)
+
+                    choose_children, prob = current.choose_expand(
+                        self.expand_children, state.ravel(), False, True)
+
+                    if current not in max_prob_index.keys():
+                        max_prob_index[current] = {}
+                    max_indexs = [
+                        list(prob).index(i)
+                        for i in heapq.nlargest(max_num, prob)
+                    ]
+                    same_val = list(set(max_indexs) & set(pre_max_indexs))
+                    print("max_indexs = ", max_indexs)
+                    print("pre_max_indexs = ", pre_max_indexs)
+                    if same_val:
+                        for i in same_val:
+                            if i not in max_prob_index[current].keys():
+                                max_prob_index[current][i] = 0
+                            else:
+                                max_prob_index[current][i] += 1
+                    try_children = current.expand(choose_children, position)
+
+                    for try_child in try_children:  #each try_child is a node class
+                        print("try_child level...............",
+                              try_child.level)
+
+                        all_struct = self._simulate(try_child.struct,
+                                                    try_child.level)
+                        rewards = []
+                        for struct in all_struct:
+                            if str(struct) not in self.chkd_candidates.keys(
+                            ):  #if this node has not been simulated
+                                e = self.get_reward(struct)
+                                if e is not False:
+                                    self.chkd_candidates[str(
+                                        struct)] = e  #record e
+                            else:
+                                e = self.chkd_candidates[str(struct)]
+                            rewards.append(
+                                e)  #record the reward of each structure
+                        rewards[:] = [x for x in rewards if x is not False
+                                      ]  #record all the rewards
+                        if len(rewards) != 0:
+                            if self.play_out_selection_mean:
+                                best_e = np.mean(rewards)
+                            else:
+                                if self.max_flag:
+                                    best_e = max(rewards)
+                                else:
+                                    best_e = min(rewards)
+                            try_child.bck_prop(best_e)
+                            record = list(
+                                self.get_records(current, try_child,
+                                                 choose_children,
+                                                 self.ucb_mean))
+                            records.append(record)
+
+                            print("ucb = ", record[0])
+                        else:
+                            current.children[try_child.value] = None
+                            all_struct = self._simulate(
+                                current.struct, current.level)
+                            rewards = []
+                            for struct in all_struct:
+                                if str(struct
+                                       ) not in self.chkd_candidates.keys():
+                                    e = self.get_reward(struct)
+                                    self.chkd_candidates[str(struct)] = e
+                                else:
+                                    e = self.chkd_candidates[str(struct)]
+                                rewards.append(e)
+                            if self.play_out_selection_mean:
+                                best_e = np.mean(rewards)
+                            else:
+                                if self.max_flag:
+                                    best_e = max(rewards)
+                                else:
+                                    best_e = min(rewards)
+                            current.bck_prop(best_e)
+                            record = list(
+                                self.get_records(current, current.child,
+                                                 choose_children,
+                                                 self.ucb_mean))
                             records.append(record)
                         "The training strategy, which is task dependent"
                         if 1 < round_no <= 100 and round_no % 2 == 0:
                             train(records[-2:-1])
                         elif round_no % 10 == 0:
                             train(records[-20:-1])
-                            
 
                 if (current == prev_current) and (len(
                         self.chkd_candidates) == prev_len):
@@ -557,6 +592,8 @@ class Tree:
                         print("current best = ",
                               min(iter(self.chkd_candidates.values())))
                     print('current.level', current.level)
+                if max(iter(self.chkd_candidates.values())) > 0.78:
+                    break
 
                 round_no += 1
                 pre_max_indexs = max_indexs[:]
@@ -568,11 +605,12 @@ class Tree:
         self.result.avg_node_visit = visits / self.result.no_nodes
         return self.result
 
+
 import pickle
 
 
 def save_tree(mdts_tree, filename):
-    pickle.dump(mdts_tree, open(filename,'wb'))
+    pickle.dump(mdts_tree, open(filename, 'wb'))
 
 
 def load_tree(filename):
@@ -586,4 +624,3 @@ def load_tree(filename):
         print('Unable to load data ', filename, ':', e)
         raise
     return pickle_data
-
