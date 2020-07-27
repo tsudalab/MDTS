@@ -64,7 +64,7 @@ myTree = mdts.Tree(no_positions=20,
                    combo_lvl=5)
 
 res = myTree.search_PG(display=True,
-                       no_candidates=500)  # apply MCTS search with PG
+                       no_candidates=100)  # apply MCTS search with PG
 
 #res=myTree.search(display=True,no_candidates=20000)# apply MCTS search without PG
 
