@@ -5,7 +5,9 @@ import itertools
 
 
 ### Thermal conductivity for (Si:Ge=1:1) alloy with 16 atoms in the interfacial structure
-DB_16=np.load('./DB_16.npy').item()
+DB_16=np.load('./DB_16.npy', allow_pickle=True).item()
+print(max(DB_16.values()))
+print(len(DB_16))
 
 ### The get_reward simulates the structure: takes a python list represents the structure and return the reward
 def get_reward(struct):
@@ -43,22 +45,22 @@ def get_reward(struct):
 ### combo_lvl: the level of the tree at which start to apply Bayesian optimisation. Default is 1 (apply at all levels)
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=list(range(16)),
-                max_flag=True,expand_children=2, play_out=5, play_out_selection="best", space=None, candidate_pool_size=100,
-                 ucb="mean", use_combo=True, combo_play_out=20, combo_init_random=5, combo_step=5, combo_lvl=5)
+                max_flag=True,expand_children=2, play_out=1, play_out_selection="best", space=None, candidate_pool_size=100,
+                 ucb="mean", use_combo=False, combo_play_out=20, combo_init_random=5, combo_step=5, combo_lvl=5)
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
 res=myTree.search(display=True,no_candidates=500)
 
-### Optimal reward
+# ### Optimal reward
 print (res.optimal_fx)
 
-### List of optimal candidates
+# ### List of optimal candidates
 print (res.optimal_candidate)
 
-### List of tuples with the candidates examined and their rewards
+# ### List of tuples with the candidates examined and their rewards
 print (res.checked_candidates_DS)
 
-### Number of examined candidates
+# ### Number of examined candidates
 print (res.checked_candidates_size)
 
 ### List of chosen candidates in order

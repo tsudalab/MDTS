@@ -4,13 +4,11 @@ import mdts
 import itertools
 import statistics as st
 import csv
-np.random.seed(0)
+
 L1_thick = range(5, 200, 5)
-print(len(L1_thick))
 L2_thick = range(5, 200, 5)
 
 bil_thick = list(itertools.product(L1_thick, L2_thick))
-print(len(bil_thick))
 
 
 ### calculate reflectivty
@@ -32,10 +30,6 @@ def simul_ref(struct):
     ai = np.arange(0.45, 0.55, 0.01)
     Ixrr = m.simulate(ai)
 
-    # ai_out=np.arange(0.40, 0.44, 0.01)
-    # Ixrr_out = m.simulate(ai_out)
-
-    # return (st.mean(Ixrr))-(0.1*(st.mean(Ixrr_out)))
     return (st.mean(Ixrr))
 
 
@@ -57,7 +51,7 @@ myTree = mdts.Tree(no_positions=20,
                    get_reward=simul_ref,
                    positions_order="direct",
                    max_flag=True,
-                   expand_children=1,
+                   expand_children=2,
                    play_out=1,
                    play_out_selection="best",
                    space=None,
@@ -68,14 +62,12 @@ myTree = mdts.Tree(no_positions=20,
                    combo_init_random=5,
                    combo_step=5,
                    combo_lvl=5)
+
 res = myTree.search_PG(display=True,
                        no_candidates=500)  # apply MCTS search with PG
+
 #res=myTree.search(display=True,no_candidates=20000)# apply MCTS search without PG
 
-# with open("result_nn_goback.csv", mode='a') as f:
-#     writer = csv.writer(f)
-#     writer.writerow([str(res.optimal_fx),str(res.optimal_candidate),str(res.checked_candidates_size),\
-#     str(res.max_depth_reached),str(res.no_nodes),str(res.avg_node_visit),str(calc_thickness(res.optimal_candidate[0]))])
 
 ### Optimal reward
 print(res.optimal_fx)
@@ -97,5 +89,5 @@ print(res.avg_node_visit)
 
 print(calc_thickness(res.optimal_candidate[0]))
 
-#mdts.save_tree(myTree, 'Tree_file')
+mdts.save_tree(myTree, 'Tree_file')
 

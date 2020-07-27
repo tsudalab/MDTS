@@ -17,21 +17,15 @@ class Result:
         self.avg_node_visit = 0.0
 
     def format(self, no_candidates, chkd_candidates, max_flag):
-        self.checked_candidates_DS = [(ast.literal_eval(x), v)
-                                      for (x, v) in chkd_candidates.items()]
+        self.checked_candidates_DS = [(ast.literal_eval(x), v) for (x, v) in chkd_candidates.items()]
         if len(self.checked_candidates_DS) > no_candidates:
-            self.checked_candidates_DS = self.checked_candidates_DS[:
-                                                                    no_candidates]
+            self.checked_candidates_DS = self.checked_candidates_DS[:no_candidates]
         self.checked_candidates_size = len(self.checked_candidates_DS)
-        self.checked_candidates, self.fx = map(
-            list, zip(*self.checked_candidates_DS))
+        self.checked_candidates, self.fx = map(list, zip(*self.checked_candidates_DS))
         self.best_fx = []
         if max_flag:
             self.optimal_fx = max(self.fx)
-            self.optimal_candidate = [
-                k for (k, v) in self.checked_candidates_DS
-                if v == self.optimal_fx
-            ]
+            self.optimal_candidate = [k for (k, v) in self.checked_candidates_DS if v == self.optimal_fx]
             self.best_fx.append(self.fx[0])
             for x in self.fx[1:]:
                 if x > self.best_fx[-1]:
@@ -40,10 +34,7 @@ class Result:
                     self.best_fx.append(self.best_fx[-1])
         else:
             self.optimal_fx = min(self.fx)
-            self.optimal_candidate = [
-                k for (k, v) in self.checked_candidates_DS
-                if v == self.optimal_fx
-            ]
+            self.optimal_candidate = [k for (k, v) in self.checked_candidates_DS if v == self.optimal_fx]
             self.best_fx.append(self.fx[0])
             for x in self.fx[1:]:
                 if x < self.best_fx[-1]:

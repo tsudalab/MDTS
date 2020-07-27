@@ -7,36 +7,16 @@ import random
 import sys
 from .policygradient import*
 import numpy as np
-
 import combo
-
 from .node import Node
 from .result import Result
-import pickle
 from sklearn import preprocessing
 import heapq
 # from math import *
 
 
 class Tree:
-    def __init__(self,
-                 get_reward,
-                 positions_order="reverse",
-                 max_flag=True,
-                 expand_children=1,
-                 space=None,
-                 candidate_pool_size=None,
-                 no_positions=None,
-                 atom_types=None,
-                 atom_const=None,
-                 play_out=1,
-                 play_out_selection="best",
-                 ucb="mean",
-                 use_combo=False,
-                 combo_init_random=1,
-                 combo_step=1,
-                 combo_lvl=1,
-                 combo_play_out=10):
+    def __init__(self, get_reward, positions_order="reverse", max_flag=True, expand_children=1, space=None, candidate_pool_size=None, no_positions=None, atom_types=None, atom_const=None, play_out=1, play_out_selection="best", ucb="mean", use_combo=False, combo_init_random=1, combo_step=1, combo_lvl=1, combo_play_out=10):
 
         if space is None:
             self.space = None
@@ -47,9 +27,7 @@ class Tree:
                 self.atom_types = atom_types
                 self.atom_const = atom_const
             if (use_combo) and (candidate_pool_size is None):
-                sys.exit(
-                    "Please set the space or set candidate_pool_size for combo search"
-                )
+                sys.exit("Please set the space or set candidate_pool_size for combo search")
             else:
                 self.candidate_pool_size = candidate_pool_size
         else:
@@ -72,19 +50,15 @@ class Tree:
 
         self.chkd_candidates = collections.OrderedDict()
         self.max_flag = max_flag
-        self.root = Node(value='R',
-                         children_values=self.atom_types,
-                         struct=[None] * self.no_positions)
+        self.root = Node(value='R', children_values=self.atom_types, struct=[None] * self.no_positions)
         self.acc_threshold = 0.1
         self.get_reward = get_reward
 
         if expand_children == "all":
             self.expand_children = len(self.atom_types)
         elif isinstance(expand_children, int):
-            if (expand_children > len(
-                    self.atom_types)) or (expand_children == 0):
-                sys.exit(
-                    "Please choose appropriate number of children to expand")
+            if (expand_children > len(self.atom_types)) or (expand_children == 0):
+                sys.exit("Please choose appropriate number of children to expand")
             else:
                 self.expand_children = expand_children
         self.result = Result()
@@ -121,13 +95,10 @@ class Tree:
             for pout in range(size):
                 cand = structure[:]
                 for value_id in range(len(self.atom_types)):
-                    diff = self.atom_const[value_id] - cand.count(
-                        self.atom_types[value_id])
+                    diff = self.atom_const[value_id] - cand.count(self.atom_types[value_id])
                     if diff != 0:
                         avl_pos = [i for i, x in enumerate(cand) if x is None]
-                        to_fill_pos = np.random.choice(avl_pos,
-                                                       diff,
-                                                       replace=False)
+                        to_fill_pos = np.random.choice(avl_pos, diff,replace=False)
                         for pos in to_fill_pos:
                             cand[pos] = self.atom_types[value_id]
                 chosen_candidates.append(cand)
@@ -142,8 +113,7 @@ class Tree:
 
     def one_hot_encode(self, space):
         no_atoms = len(self.atom_types)
-        new_space = np.empty((space.shape[0], space.shape[1], no_atoms),
-                             dtype=int)
+        new_space = np.empty((space.shape[0], space.shape[1], no_atoms),dtype=int)
         for at_ind, at in enumerate(self.atom_types):
             one_hot = np.zeros(no_atoms, dtype=int)
             one_hot[at_ind] = 1
@@ -155,8 +125,7 @@ class Tree:
             if self.use_combo is False:
                 return self._enumerate_cand(struct, self.play_out)
             else:
-                my_space = self._enumerate_cand(struct,
-                                                self.candidate_pool_size)
+                my_space = self._enumerate_cand(struct, self.candidate_pool_size)
                 return self._simulate_combo(struct, np.array(my_space))
         else:
             if (self.use_combo) and (lvl >= self.combo_lvl):
@@ -170,15 +139,12 @@ class Tree:
         filled_pos = [i for i, x in enumerate(structure) if x is not None]
         filled_values = [x for i, x in enumerate(structure) if x is not None]
         sub_data = self.space[:, filled_pos]
-        avl_candidates_idx = np.where(np.all(sub_data == filled_values,
-                                             axis=1))[0]
+        avl_candidates_idx = np.where(np.all(sub_data == filled_values,axis=1))[0]
         if len(avl_candidates_idx) != 0:
             if self.play_out <= len(avl_candidates_idx):
-                chosen_idxs = np.random.choice(avl_candidates_idx,
-                                               self.play_out)
+                chosen_idxs = np.random.choice(avl_candidates_idx,self.play_out)
             else:
-                chosen_idxs = np.random.choice(avl_candidates_idx,
-                                               len(avl_candidates_idx))
+                chosen_idxs = np.random.choice(avl_candidates_idx,len(avl_candidates_idx))
             for idx in chosen_idxs:
                 chosen_candidates.append(list(self.space[idx]))
         return chosen_candidates
@@ -188,12 +154,9 @@ class Tree:
         if my_space is None:
             structure = struct[:]
             filled_pos = [i for i, x in enumerate(structure) if x is not None]
-            filled_values = [
-                x for i, x in enumerate(structure) if x is not None
-            ]
+            filled_values = [x for i, x in enumerate(structure) if x is not None]
             sub_data = self.space[:, filled_pos]
-            avl_candidates_idx = np.where(
-                np.all(sub_data == filled_values, axis=1))[0]
+            avl_candidates_idx = np.where(np.all(sub_data == filled_values, axis=1))[0]
             sub_space = self.space[avl_candidates_idx]
             one_hot_sub_space = self.one_hot_space[avl_candidates_idx]
         else:
@@ -206,11 +169,9 @@ class Tree:
                 if str(list(
                         sub_space[action[0]])) in self.chkd_candidates.keys():
                     if self.max_flag:
-                        return self.chkd_candidates[str(
-                            list(sub_space[action[0]]))]
+                        return self.chkd_candidates[str(list(sub_space[action[0]]))]
                     else:
-                        return -self.chkd_candidates[str(
-                            list(sub_space[action[0]]))]
+                        return -self.chkd_candidates[str(list(sub_space[action[0]]))]
                 else:
                     if self.max_flag:
                         return self.get_reward(sub_space[action[0]])
@@ -220,15 +181,12 @@ class Tree:
             policy = combo.search.discrete.policy(test_X=one_hot_sub_space)
 
             if self.combo_play_out <= 1:
-                sys.exit(
-                    "combo_play_out can not be less than 2 when use_combo is True"
-                )
+                sys.exit("combo_play_out can not be less than 2 when use_combo is True")
 
             sub_space_scand_cand = []
             sub_space_scand_val = []
             for c in self.chkd_candidates.keys():
-                t = np.where(np.all(sub_space == ast.literal_eval(c),
-                                    axis=1))[0]
+                t = np.where(np.all(sub_space == ast.literal_eval(c),axis=1))[0]
                 if len(t) != 0:
                     sub_space_scand_cand.append(t[0])
                     if self.max_flag:
@@ -236,8 +194,7 @@ class Tree:
                     else:
                         sub_space_scand_val.append(-self.chkd_candidates[c])
 
-            sub_space_pair = list(
-                zip(sub_space_scand_cand, sub_space_scand_val))
+            sub_space_pair = list(zip(sub_space_scand_cand, sub_space_scand_val))
             sub_space_pair.sort(key=lambda x: x[1], reverse=True)
 
             if len(sub_space_pair) >= self.combo_play_out:
@@ -251,32 +208,16 @@ class Tree:
                 trained = len(sub_space_pair)
                 if len(sub_space_pair) < self.combo_init_random:
                     if sub_space.shape[0] >= self.combo_init_random:
-                        policy.random_search(
-                            max_num_probes=self.combo_init_random -
-                            len(sub_space_pair),
-                            simulator=combo_simulater)
+                        policy.random_search(max_num_probes=self.combo_init_random - len(sub_space_pair),simulator=combo_simulater)
                         trained = self.combo_init_random
                     else:
-                        policy.random_search(
-                            max_num_probes=sub_space.shape[0] -
-                            len(sub_space_pair),
-                            simulator=combo_simulater)
+                        policy.random_search(max_num_probes=sub_space.shape[0] - len(sub_space_pair),simulator=combo_simulater)
                         trained = sub_space.shape[0]
 
             if sub_space.shape[0] >= self.combo_play_out:
-                res = policy.bayes_search(max_num_probes=self.combo_play_out -
-                                          trained,
-                                          simulator=combo_simulater,
-                                          score='TS',
-                                          interval=self.combo_step,
-                                          num_rand_basis=5000)
+                res = policy.bayes_search(max_num_probes=self.combo_play_out - trained, simulator=combo_simulater, score='TS', interval=self.combo_step, num_rand_basis=5000)
             else:
-                res = policy.bayes_search(max_num_probes=sub_space.shape[0] -
-                                          trained,
-                                          simulator=combo_simulater,
-                                          score='TS',
-                                          interval=self.combo_step,
-                                          num_rand_basis=5000)
+                res = policy.bayes_search(max_num_probes=sub_space.shape[0] - trained, simulator=combo_simulater, score='TS', interval=self.combo_step, num_rand_basis=5000)
 
             for i in range(len(res.chosed_actions[0:res.total_num_search])):
                 action = res.chosed_actions[i]
@@ -296,13 +237,9 @@ class Tree:
         state_raw.extend([current.level for i in range(3)])
         if current.parent is not None:
             if type(current.parent.value) == str:
-                state_raw.extend(
-                    [infor3 for infor3 in [-1, current.parent.level]])
+                state_raw.extend([infor3 for infor3 in [-1, current.parent.level]])
             else:
-                state_raw.extend([
-                    infor3
-                    for infor3 in [current.parent.value, current.parent.level]
-                ])
+                state_raw.extend([infor3 for infor3 in [current.parent.value, current.parent.level]])
         else:
             state_raw.extend([-1.5 for i in range(2)])
         if type(current.value) == str:
@@ -319,8 +256,7 @@ class Tree:
         ucb = child.cal_ucb(child, ucb_mean)
         return ucb, np.array(state).ravel(), choose_children
 
-    def prob_select(self, current_row, max_prob_index,
-                    round_no):  # select node from policy gradient
+    def prob_select(self, current_row, max_prob_index, round_no):  # select node from policy gradient
         limit = 40
         chosen_num = 10
         if round_no >= 2 and current_row in max_prob_index.keys():
@@ -361,11 +297,9 @@ class Tree:
                     current.bck_prop(e)
                 else:
                     position = self.positions_order[current.level]
-                    try_children = current.expand_origin(
-                        position, self.expand_children)
+                    try_children = current.expand_origin(position, self.expand_children)
                     for try_child in try_children:
-                        all_struct = self._simulate(try_child.struct,
-                                                    try_child.level)
+                        all_struct = self._simulate(try_child.struct,try_child.level)
                         #if len(all_struct) != 0:
                         rewards = []
                         for struct in all_struct:
@@ -388,12 +322,10 @@ class Tree:
                             try_child.bck_prop(best_e)
                         else:
                             current.children[try_child.value] = None
-                            all_struct = self._simulate(
-                                current.struct, current.level)
+                            all_struct = self._simulate(current.struct, current.level)
                             rewards = []
                             for struct in all_struct:
-                                if str(struct
-                                       ) not in self.chkd_candidates.keys():
+                                if str(struct) not in self.chkd_candidates.keys():
                                     e = self.get_reward(struct)
                                     self.chkd_candidates[str(struct)] = e
                                 else:
@@ -407,10 +339,8 @@ class Tree:
                                 else:
                                     best_e = min(rewards)
                             current.bck_prop(best_e)
-                if (current == prev_current) and (len(
-                        self.chkd_candidates) == prev_len):
-                    adjust_val = (no_candidates -
-                                  len(self.chkd_candidates)) / no_candidates
+                if (current == prev_current) and (len(self.chkd_candidates) == prev_len):
+                    adjust_val = (no_candidates - len(self.chkd_candidates)) / no_candidates
                     if adjust_val < self.acc_threshold:
                         adjust_val = self.acc_threshold
                     current.adjust_c(adjust_val)
@@ -425,14 +355,12 @@ class Tree:
                     else:
                         print("current best = ",
                               min(iter(self.chkd_candidates.values())))
-                if max(iter(self.chkd_candidates.values())) > 0.76:
-                    break
+
                 round_no += 1
         self.result.format(no_candidates=no_candidates,
                            chkd_candidates=self.chkd_candidates,
                            max_flag=self.max_flag)
-        self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info(
-        )
+        self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info()
         self.result.avg_node_visit = visits / self.result.no_nodes
         return self.result
 
@@ -592,35 +520,13 @@ class Tree:
                         print("current best = ",
                               min(iter(self.chkd_candidates.values())))
                     print('current.level', current.level)
-                if max(iter(self.chkd_candidates.values())) > 0.78:
-                    break
+
 
                 round_no += 1
                 pre_max_indexs = max_indexs[:]
         self.result.format(no_candidates=no_candidates,
                            chkd_candidates=self.chkd_candidates,
                            max_flag=self.max_flag)
-        self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info(
-        )
+        self.result.no_nodes, visits, self.result.max_depth_reached = self.root.get_info()
         self.result.avg_node_visit = visits / self.result.no_nodes
         return self.result
-
-
-import pickle
-
-
-def save_tree(mdts_tree, filename):
-    pickle.dump(mdts_tree, open(filename, 'wb'))
-
-
-def load_tree(filename):
-    try:
-        with open(filename, 'rb') as f:
-            pickle_data = pickle.load(f)
-    except UnicodeDecodeError as e:
-        with open(filename, 'rb') as f:
-            pickle_data = pickle.load(f, encoding='latin1')
-    except Exception as e:
-        print('Unable to load data ', filename, ':', e)
-        raise
-    return pickle_data

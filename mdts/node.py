@@ -5,19 +5,7 @@ from .policygradient import *
 
 
 class Node:
-    def __init__(self,
-                 value,
-                 children_values,
-                 parent=None,
-                 level=0,
-                 position=None,
-                 struct=None,
-                 v=0,
-                 w=0.0,
-                 children=None,
-                 min_range=float(math.pow(10, 10)),
-                 max_range=0.0,
-                 adjust_val=1):
+    def __init__(self, value, children_values, parent=None, level=0, position=None, struct=None, v=0, w=0.0, children=None, min_range=float(math.pow(10, 10)),max_range=0.0, adjust_val=1):
 
         self.value = value
         self.parent = parent
@@ -42,88 +30,53 @@ class Node:
         else:
             return False
 
-    def select_origin(
-            self, max_flag, ucb_mean
-    ):  # original selection strategy(select nodes at same level)
+    def select_origin(self, max_flag, ucb_mean):  # original selection strategy (expand all children first)
         if self.has_all_children():
-            c = ((math.sqrt(2) / 4) *
-                 (self.max_range - self.min_range)) * self.adjust_val
+            c = ((math.sqrt(2) / 4) * (self.max_range - self.min_range)) * self.adjust_val
             u_scores = {}
             if max_flag:
                 for child in iter(self.children.values()):
                     if child is not None:
                         if ucb_mean:
-
-                            u_scores[child.value] = (
-                                (child.w / child.v) + (c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v))))
+                            u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
                         else:
-                            u_scores[child.value] = child.max_range + (
-                                c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v)))
-                max_idxs = [
-                    i for i, x in iter(u_scores.items())
-                    if x == max(iter(u_scores.values()))
-                ]
+                            u_scores[child.value] = child.max_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
+                max_idxs = [i for i, x in iter(u_scores.items()) if x == max(iter(u_scores.values()))]
                 idx = np.random.choice(max_idxs)
             else:
                 for child in iter(self.children.values()):
                     if child is not None:
                         if ucb_mean:
-                            u_scores[child.value] = (
-                                (child.w / child.v) - (c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v))))
+                            u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
                         else:
-                            u_scores[child.value] = child.min_range + (
-                                c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v)))
-                min_idxs = [
-                    i for i, x in iter(u_scores.items())
-                    if x == min(iter(u_scores.values()))
-                ]
+                            u_scores[child.value] = child.min_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
+                min_idxs = [i for i, x in iter(u_scores.items()) if x == min(iter(u_scores.values()))]
                 idx = np.random.choice(min_idxs)
-            return self.children[idx].select(max_flag, ucb_mean)
+            return self.children[idx].select_origin(max_flag, ucb_mean)
         else:
             return self
 
-    def select_root(self, max_flag,
-                    ucb_mean):  # select nodes from the root node
+    def select_root(self, max_flag, ucb_mean):  # select nodes from the root node
         if self.has_all_children():
-            c = ((math.sqrt(2) / 4) *
-                 (self.max_range - self.min_range)) * self.adjust_val
+            c = ((math.sqrt(2) / 4) * (self.max_range - self.min_range)) * self.adjust_val
             u_scores = {}
             if max_flag:
                 for child in iter(self.children.values()):
                     if child is not None:
                         if ucb_mean:
-
-                            u_scores[child.value] = (
-                                (child.w / child.v) + (c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v))))
+                            u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
                         else:
-                            u_scores[child.value] = child.max_range + (
-                                c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v)))
-                max_idxs = [
-                    i for i, x in iter(u_scores.items())
-                    if x == max(iter(u_scores.values()))
-                ]
+                            u_scores[child.value] = child.max_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
+                max_idxs = [i for i, x in iter(u_scores.items()) if x == max(iter(u_scores.values()))]
                 idx = np.random.choice(max_idxs)
             else:
                 for child in iter(self.children.values()):
                     if child is not None:
                         if ucb_mean:
-                            u_scores[child.value] = (
-                                (child.w / child.v) - (c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v))))
+                            u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
                         else:
-                            u_scores[child.value] = child.min_range + (
-                                c * (math.sqrt(
-                                    (2 * math.log(self.v)) / child.v)))
-                min_idxs = [
-                    i for i, x in iter(u_scores.items())
-                    if x == min(iter(u_scores.values()))
-                ]
+                            u_scores[child.value] = child.min_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
+                min_idxs = [i for i, x in iter(u_scores.items()) if x == min(iter(u_scores.values()))]
                 idx = np.random.choice(min_idxs)
             return self.children[idx]
         else:  # return ifself if this node doesn't have children
@@ -248,6 +201,25 @@ class Node:
                     avl_child_values, state, no_chosen_values)
 
         return chosen_values, prob
+
+    def expand_origin(self, position, expand_children):
+        if self.children is None:
+            self.children = {}
+        expanded = []
+        avl_child_values = list(set(self.children_values) - set(self.children.keys()))
+        if expand_children > len(avl_child_values):
+            no_chosen_values = len(avl_child_values)
+        else:
+            no_chosen_values = expand_children
+        chosen_values = np.random.choice(avl_child_values, no_chosen_values, replace=False)
+        for child_value in chosen_values:
+            child_struct = self.struct[:]
+            child_struct[position] = child_value
+            self.children[child_value] = Node(value=child_value, children_values=self.children_values, parent=self,
+                                              level=self.level + 1, position=position, struct=child_struct)
+            expanded.append(self.children[child_value])
+        return expanded
+
 
     def expand(self, chosen_values, position):
         if self.children is None:
