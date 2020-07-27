@@ -46,7 +46,7 @@ def get_reward(struct):
 
 myTree=mdts.Tree(no_positions=16, atom_types=[0,1], atom_const=[8,8], get_reward=get_reward, positions_order=list(range(16)),
                 max_flag=True,expand_children=2, play_out=1, play_out_selection="best", space=None, candidate_pool_size=100,
-                 ucb="mean", use_combo=False, combo_play_out=20, combo_init_random=5, combo_step=5, combo_lvl=5)
+                 ucb="mean", use_combo=True, combo_play_out=20, combo_init_random=5, combo_step=5, combo_lvl=5)
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
 res=myTree.search(display=True,no_candidates=500)

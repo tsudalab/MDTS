@@ -379,8 +379,7 @@ class Tree:
             sys.exit("Please specify no_candidates")
         else:
             while len(self.chkd_candidates) < no_candidates:
-                current_row = self.root.select_origin(self.max_flag,
-                                                      self.ucb_mean)
+                current_row = self.root.select_origin(self.max_flag, self.ucb_mean)
                 print("current_row.level = ", current_row.level)
                 if simple:  # apply the PG simple strategy by default
                     if (round_no - 1) % 10 == 0:

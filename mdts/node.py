@@ -56,31 +56,32 @@ class Node:
         else:
             return self
 
-    def select_root(self, max_flag, ucb_mean):  # select nodes from the root node
-        if self.has_all_children():
-            c = ((math.sqrt(2) / 4) * (self.max_range - self.min_range)) * self.adjust_val
-            u_scores = {}
-            if max_flag:
-                for child in iter(self.children.values()):
-                    if child is not None:
-                        if ucb_mean:
-                            u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
-                        else:
-                            u_scores[child.value] = child.max_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
-                max_idxs = [i for i, x in iter(u_scores.items()) if x == max(iter(u_scores.values()))]
-                idx = np.random.choice(max_idxs)
-            else:
-                for child in iter(self.children.values()):
-                    if child is not None:
-                        if ucb_mean:
-                            u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
-                        else:
-                            u_scores[child.value] = child.min_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
-                min_idxs = [i for i, x in iter(u_scores.items()) if x == min(iter(u_scores.values()))]
-                idx = np.random.choice(min_idxs)
-            return self.children[idx]
-        else:  # return ifself if this node doesn't have children
-            return self
+### should be removed
+    # def select_root(self, max_flag, ucb_mean):  # select nodes from the root node
+    #     if self.has_all_children():
+    #         c = ((math.sqrt(2) / 4) * (self.max_range - self.min_range)) * self.adjust_val
+    #         u_scores = {}
+    #         if max_flag:
+    #             for child in iter(self.children.values()):
+    #                 if child is not None:
+    #                     if ucb_mean:
+    #                         u_scores[child.value] = ((child.w / child.v) + (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
+    #                     else:
+    #                         u_scores[child.value] = child.max_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
+    #             max_idxs = [i for i, x in iter(u_scores.items()) if x == max(iter(u_scores.values()))]
+    #             idx = np.random.choice(max_idxs)
+    #         else:
+    #             for child in iter(self.children.values()):
+    #                 if child is not None:
+    #                     if ucb_mean:
+    #                         u_scores[child.value] = ((child.w / child.v) - (c * (math.sqrt((2 * math.log(self.v)) / child.v))))
+    #                     else:
+    #                         u_scores[child.value] = child.min_range + (c * (math.sqrt((2 * math.log(self.v)) / child.v)))
+    #             min_idxs = [i for i, x in iter(u_scores.items()) if x == min(iter(u_scores.values()))]
+    #             idx = np.random.choice(min_idxs)
+    #         return self.children[idx]
+    #     else:  # return ifself if this node doesn't have children
+    #         return self
 
     def cal_ucb(self, node, ucb_mean):  # calculate UCB values
         c = ((math.sqrt(2) / 4) *
