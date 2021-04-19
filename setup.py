@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='mdts',
-      version='1',
+      version='1.5',
       description='Automatic Materials Design using Tree Search',
       url='https://github.com/tsudalab/MDTS',
       author='Sae Dieb',

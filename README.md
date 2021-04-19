@@ -2,12 +2,14 @@
 Materials Design by Monte Carlo Tree Search
 
 # Required Packages
-python >= 2.7.x 
+Python >= 2.7.x (Python 3. also can be used)
 
 numpy >=1.12.x
 
-COMBO 
-https://github.com/tsudalab/combo
+COMBO  (if you want to use Bayesian optimzation in combination with MDTS)
+https://github.com/tsudalab/combo3
+
+Tensorflow 2 and Keras if you want to use policy gradient in combination with MDTS
 
 # Documentation
 Complete documentation is [here](http://mdts.readthedocs.io/en/latest/)
@@ -30,5 +32,3 @@ If you use this package, please cite us:
 Thaer M. Dieb, Shenghong Ju, Kazuki Yoshizoe, Zhufeng Hou, Junichiro Shiomi and Koji Tsuda,
 MDTS: Automatic Complex Materials Design using Monte Carlo Tree Search,
 Science and Technology of Advanced Materials, Vol. 18, Iss. 1, 2017
-
-Policy gradient component: credit to Mr. Zhilong Song
