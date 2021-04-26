@@ -23,16 +23,16 @@ class Tree:
             if all(isinstance(pv,int) for pv in position_values):
                 self.position_values = position_values
                 self.position_values_lists=[position_values] * self.no_positions
+                self.position_values_const = position_values_const
             else:
                 if (all(isinstance(pv, list) for pv in position_values)) and (len(position_values)==self.no_positions):
                     self.position_values_lists=position_values
                     flat_pv_list = [item for sublist in position_values for item in sublist]
-
                     self.position_values=list(set(flat_pv_list))
+                    self.position_values_const = None
                 else:
                     sys.exit("no_positions and position_values do not match")
 
-        self.position_values_const = position_values_const
 
         if positions_order == "direct":
             self.positions_order = list(range(self.no_positions))

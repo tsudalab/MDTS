@@ -104,7 +104,7 @@ class Node:
 
         for child_value_idx in chosen_values_idx:
             child_struct = self.struct[:]
-            child_value=position_values_lists[position][child_value_idx]
+            child_value=position_values[child_value_idx]
             child_struct[position] = child_value
             self.children[child_value_idx] = Node(value=child_value, children_values_idx=self.children_values_idx, parent=self,
                                                   level=self.level + 1, position=position, struct=child_struct)
@@ -163,7 +163,7 @@ class Node:
         expanded = []
         for child_value_idx in chosen_values_idx:
             child_struct = self.struct[:]
-            child_value=position_values_lists[position][child_value_idx]
+            child_value=position_values[child_value_idx]
             child_struct[position] = child_value
             self.children[child_value_idx] = Node(value=child_value, children_values_idx=self.children_values_idx,
                                                   parent=self,
