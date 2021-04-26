@@ -27,9 +27,8 @@ class Tree:
                 if (all(isinstance(pv, list) for pv in position_values)) and (len(position_values)==self.no_positions):
                     self.position_values_lists=position_values
                     flat_pv_list = [item for sublist in position_values for item in sublist]
-                    max_pv=max(flat_pv_list)
-                    min_pv=min(flat_pv_list)
-                    self.position_values=list(range(min_pv,max_pv+1))
+
+                    self.position_values=list(set(flat_pv_list))
                 else:
                     sys.exit("no_positions and position_values do not match")
 
