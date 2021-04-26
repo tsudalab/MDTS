@@ -101,6 +101,13 @@ class Tree:
         self.result = Result()
         self.chkd_candidates = collections.OrderedDict()
         self.root = Node(value='R', children_values_idx=list(range(len(self.position_values))), struct=[None] * self.no_positions)
+        ### initializing the root node
+        position_child = self.positions_order[0]
+        invalid_nodes_values_idx = [self.position_values.index(i) for i in
+                                    list(set(self.position_values) - set(self.position_values_lists[position_child]))]
+        for inv in invalid_nodes_values_idx:
+            self.root.children[inv] = None
+
         self.acc_threshold = 0.1
 
     def _fill_cand(self,structure):
