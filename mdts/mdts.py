@@ -151,7 +151,7 @@ class Tree:
                     chosen_candidates.append(outcand[:])
 
         i=0
-        while (len(chosen_candidates)==0) and (i<=100000):
+        while (len(chosen_candidates)==0) and (i<=1000000):
             for pout in range(size):
                 cand = structure[:]
                 outcand=self._fill_cand(cand)
