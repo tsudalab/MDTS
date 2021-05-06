@@ -401,12 +401,13 @@ class Tree:
                     print("checked candidates = ", len(self.chkd_candidates))
                     if len(self.chkd_candidates)!=0:
                         ex_F=[i for i in iter(self.chkd_candidates.values()) if i is not False]
-                        if self.max_flag:
-                            print("current best = ",
-                                  max(ex_F))
-                        else:
-                            print("current best = ",
-                                  min(ex_F))
+                        if len(ex_F)!=0:
+                            if self.max_flag:
+                                print("current best = ",
+                                      max(ex_F))
+                            else:
+                                print("current best = ",
+                                      min(ex_F))
 
                 round_no += 1
 
