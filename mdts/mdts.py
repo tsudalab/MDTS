@@ -359,12 +359,12 @@ class Tree:
                         all_struct = self._simulate(try_child.struct)
                         best_e=self.get_best_e(all_struct)
                         if best_e!=None:
-                                try_child.bck_prop(best_e)
+                            try_child.bck_prop(best_e)
 
-                                ### to be revised for max or min
-                                if self.use_PG:
-                                    self.PG_add2batch(try_child)
-                                    #prob_train[self.position_values.index(try_child.value)]=try_probs[try_children_idx.index(self.position_values.index(try_child.value))]
+                            ### to be revised for max or min
+                            if self.use_PG:
+                                self.PG_add2batch(try_child)
+                                #prob_train[self.position_values.index(try_child.value)]=try_probs[try_children_idx.index(self.position_values.index(try_child.value))]
 
                         else:
                             current.children[try_child.value] = None
