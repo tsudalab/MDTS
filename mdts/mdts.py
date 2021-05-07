@@ -388,6 +388,8 @@ class Tree:
 
                 if self.use_PG:
                     if len(self.PG_batch["rewards"]) >= self.PG_batch_size:
+                        if display:
+                            print ("Training policy network")
                         self.PG.train(self.PG_batch, len(self.PG_batch["rewards"]))
                         self.PG_trained = True
                         self.PG_batch["states"] = []

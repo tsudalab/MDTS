@@ -36,4 +36,4 @@ class PG:
 
 
     def train(self, PG_batch, PG_batch_size):
-        self.model.fit(np.array(PG_batch["states"]).reshape(PG_batch_size, self.input_dim), np.array(PG_batch["actions"]).reshape(PG_batch_size,self.output_dim), sample_weight=np.array(PG_batch["rewards"]), verbose=0)
+        self.model.fit(np.array(PG_batch["states"]).reshape(PG_batch_size, self.input_dim), np.array(PG_batch["actions"]).reshape(PG_batch_size,self.output_dim), sample_weight=np.array(PG_batch["rewards"]).flatten(), verbose=0)
