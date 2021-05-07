@@ -301,7 +301,7 @@ class Tree:
 
     def PG_add2batch(self,node):
         PG_rewards = [node.cal_ucb(node.parent.c, self.max_flag)]
-        prob_train = [0.0] * len(self.position_values)
+        prob_train = [0] * len(self.position_values)
         prob_train[self.position_values.index(node.value)] = 1
         self.PG_batch["states"].append(self.convert_state(node.parent.get_state()))
         self.PG_batch["actions"].append(prob_train)
