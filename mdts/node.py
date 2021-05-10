@@ -147,7 +147,7 @@ class Node:
         all_idx_ex_none=[j for j in self.children_values_idx if j not in nons]
         return all_idx_ex_none
 
-    def try_expand_PG(self,chosen_values_idx):
+    def try_expand_XP(self,chosen_values_idx):
         expand = True
         jump_child = None
         if not self.skipped:
@@ -159,7 +159,7 @@ class Node:
                         break
         return expand, jump_child
 
-    def expand_PG(self, position, position_child, chosen_values_idx, position_values, position_values_lists):
+    def expand_XP(self, position, position_child, chosen_values_idx, position_values, position_values_lists):
         expanded = []
         for child_value_idx in chosen_values_idx:
             child_struct = self.struct[:]

@@ -6,14 +6,14 @@ import collections
 import math
 import random
 import sys
-from .policygradient import PG
+from .expansionpolicy import XP
 import numpy as np
 import combo
 from goto import with_goto
 
 
 class Tree:
-    def __init__(self, no_positions=None, position_values=None, position_values_const=None, positions_order="direct", max_flag=True, get_reward=None, constraints=None, expand_children=1, play_out=1, play_out_selection="best", use_combo=False, candidate_pool_size=None, combo_lvl=1, combo_init_random=1, combo_step=1,combo_play_out=10, use_PG=False, PG_batch_size=100):
+    def __init__(self, no_positions=None, position_values=None, position_values_const=None, positions_order="direct", max_flag=True, get_reward=None, constraints=None, expand_children=1, play_out=1, play_out_selection="best", use_combo=False, candidate_pool_size=None, combo_lvl=1, combo_init_random=1, combo_step=1,combo_play_out=10, use_XP=False, XP_batch_size=100):
 
         if (no_positions is None) or (position_values is None):
             sys.exit("no_positions and position_values should not be None")
@@ -86,17 +86,17 @@ class Tree:
             else:
                 self.candidate_pool_size = candidate_pool_size
 
-        ### for policy gradient
-        self.use_PG = use_PG
-        if use_PG:
+        ### for expansion policy
+        self.use_XP = use_XP
+        if use_XP:
             state_dim = self.no_positions+1+len(self.position_values)+1  # is the state (the node) witch has 2 values [level, value] in hot encoded manner
-            self.PG = PG(state_dim, len(self.position_values))
-        self.PG_batch_size=PG_batch_size
-        self.PG_batch={}
-        self.PG_batch["states"] =[]
-        self.PG_batch["actions"] =[]
-        self.PG_batch["rewards"] =[]
-        self.PG_trained=False
+            self.XP = XP(state_dim, len(self.position_values))
+        self.XP_batch_size=XP_batch_size
+        self.XP_batch={}
+        self.XP_batch["states"] =[]
+        self.XP_batch["actions"] =[]
+        self.XP_batch["rewards"] =[]
+        self.XP_trained=False
 
         self.result = Result()
         self.chkd_candidates = collections.OrderedDict()
@@ -299,13 +299,13 @@ class Tree:
         hot_val=self.hot_val(state[1])
         return hot_lvl +hot_val
 
-    def PG_add2batch(self,node):
-        PG_rewards = [node.cal_ucb(node.parent.c, self.max_flag)]
+    def XP_add2batch(self,node):
+        XP_rewards = [node.cal_ucb(node.parent.c, self.max_flag)]
         prob_train = [0.0] * len(self.position_values)
         prob_train[self.position_values.index(node.value)] = 1.0
-        self.PG_batch["states"].append(self.convert_state(node.parent.get_state()))
-        self.PG_batch["actions"].append(prob_train)
-        self.PG_batch["rewards"].append(PG_rewards)
+        self.XP_batch["states"].append(self.convert_state(node.parent.get_state()))
+        self.XP_batch["actions"].append(prob_train)
+        self.XP_batch["rewards"].append(XP_rewards)
 
     @with_goto
     def search(self, no_candidates=None, display=True):
@@ -327,8 +327,8 @@ class Tree:
                         e = self.chkd_candidates[str(struct)]
 
                     current.bck_prop(e)
-                    if self.use_PG:
-                        self.PG_add2batch(current)
+                    if self.use_XP:
+                        self.XP_add2batch(current)
 
                 else:
                     position = self.positions_order[current.level]
@@ -337,17 +337,17 @@ class Tree:
                     else:
                         position_child=self.positions_order[current.level+1]
                     try_children=None
-                    if (self.use_PG) and (self.PG_trained):
+                    if (self.use_XP) and (self.XP_trained):
                         if current.skipped:
-                            try_children_idx, try_probs = self.PG.choose_children(self.convert_state(current.get_state()),
+                            try_children_idx, try_probs = self.XP.choose_children(self.convert_state(current.get_state()),
                                 self.expand_children, current.get_avl_idx(), self.max_flag)
-                            try_children = current.expand_PG(position, position_child, try_children_idx, self.position_values, self.position_values_lists)
+                            try_children = current.expand_XP(position, position_child, try_children_idx, self.position_values, self.position_values_lists)
                         else:
-                            try_children_idx, try_probs = self.PG.choose_children(self.convert_state(current.get_state()),
+                            try_children_idx, try_probs = self.XP.choose_children(self.convert_state(current.get_state()),
                                                                                   self.expand_children, current.get_all_idx_ex_none(), self.max_flag)
-                            expandable, jump_child = current.try_expand_PG(try_children_idx)
+                            expandable, jump_child = current.try_expand_XP(try_children_idx)
                             if expandable:
-                                try_children = current.expand_PG(position,position_child, try_children_idx, self.position_values, self.position_values_lists)
+                                try_children = current.expand_XP(position,position_child, try_children_idx, self.position_values, self.position_values_lists)
                             else:
                                 current.skipped=True
                                 current = jump_child
@@ -362,8 +362,8 @@ class Tree:
                             try_child.bck_prop(best_e)
 
                             ### to be revised for max or min
-                            if self.use_PG:
-                                self.PG_add2batch(try_child)
+                            if self.use_XP:
+                                self.XP_add2batch(try_child)
                                 #prob_train[self.position_values.index(try_child.value)]=try_probs[try_children_idx.index(self.position_values.index(try_child.value))]
 
                         else:
@@ -373,9 +373,9 @@ class Tree:
                             if best_e!=None:
                                 current.bck_prop(best_e)
 
-                                if self.use_PG:
+                                if self.use_XP:
                                     if current.parent!=None:
-                                        self.PG_add2batch(current)
+                                        self.XP_add2batch(current)
 
 
                 if (current == prev_current) and (len(self.chkd_candidates) == prev_len):
@@ -386,15 +386,15 @@ class Tree:
                         adjust_val = self.acc_threshold
                     current.adjust_c(adjust_val)
 
-                if self.use_PG:
-                    if len(self.PG_batch["rewards"]) >= self.PG_batch_size:
+                if self.use_XP:
+                    if len(self.XP_batch["rewards"]) >= self.XP_batch_size:
                         if display:
                             print ("Training policy network")
-                        self.PG.train(self.PG_batch, len(self.PG_batch["rewards"]))
-                        self.PG_trained = True
-                        self.PG_batch["states"] = []
-                        self.PG_batch["actions"] = []
-                        self.PG_batch["rewards"] = []
+                        self.XP.train(self.XP_batch, len(self.XP_batch["rewards"]))
+                        self.XP_trained = True
+                        self.XP_batch["states"] = []
+                        self.XP_batch["actions"] = []
+                        self.XP_batch["rewards"] = []
 
                 prev_len = len(self.chkd_candidates)
                 prev_current = current

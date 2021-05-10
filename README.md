@@ -9,7 +9,7 @@ numpy >=1.12.x
 COMBO  (if you want to use Bayesian optimzation in combination with MDTS)
 https://github.com/tsudalab/combo3
 
-Tensorflow 2 and Keras if you want to use policy gradient in combination with MDTS
+Tensorflow 2 and Keras if you want to use the neural network expansion policy in combination with MDTS
 
 # Documentation
 Complete documentation is [here](http://mdts.readthedocs.io/en/latest/)
