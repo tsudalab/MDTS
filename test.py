@@ -58,7 +58,7 @@ def constraints(struct):
 
 myTree=mdts.Tree(no_positions=16, position_values=[0,1], position_values_const=[8,8], positions_order=list(range(16)), max_flag=True, get_reward=get_reward, constraints=None,
                 expand_children=1, play_out=1, play_out_selection="best", use_combo=False, candidate_pool_size=100,
-                 combo_lvl=1, combo_init_random=5, combo_step=5, combo_play_out=20, use_XP=True, XP_batch_size=50)
+                 combo_lvl=1, combo_init_random=5, combo_step=5, combo_play_out=20, use_XP=False, XP_batch_size=50)
 
 
 ### Start the search for certain number of candidates and returns an object of type Result contains the result of the search
