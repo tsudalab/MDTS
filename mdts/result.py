@@ -58,7 +58,7 @@ class Result:
         np.savez(filename, **wrap)
 
     def load(self, filename):
-        wrap = np.load(filename)
+        wrap = np.load(filename,allow_pickle=True)
         self.checked_candidates_DS = wrap['checked_candidates_DS']
         self.checked_candidates_size = wrap['checked_candidates_size']
         self.checked_candidates = wrap['checked_candidates']
