@@ -27,21 +27,36 @@ class Result:
         if max_flag:
             self.optimal_fx = max(ex_F)
             self.optimal_candidate = [k for (k, v) in self.checked_candidates_DS if v == self.optimal_fx]
-            self.best_fx.append(ex_F[0])
-            for x in ex_F[1:]:
-                if x > self.best_fx[-1]:
-                    self.best_fx.append(x)
+            if self.fx[0]==False:
+                self.best_fx.append(min(ex_F))
+            else:
+                self.best_fx.append(self.fx[0])
+
+            for x in self.fx[1:]:
+                if x is not False:
+                    if x > self.best_fx[-1]:
+                        self.best_fx.append(x)
+                    else:
+                        self.best_fx.append(self.best_fx[-1])
                 else:
                     self.best_fx.append(self.best_fx[-1])
         else:
             self.optimal_fx = min(ex_F)
             self.optimal_candidate = [k for (k, v) in self.checked_candidates_DS if v == self.optimal_fx]
-            self.best_fx.append(ex_F[0])
-            for x in ex_F[1:]:
-                if x < self.best_fx[-1]:
-                    self.best_fx.append(x)
+            if self.fx[0]==False:
+                self.best_fx.append(max(ex_F))
+            else:
+                self.best_fx.append(self.fx[0])
+
+            for x in self.fx[1:]:
+                if x is not False:
+                    if x < self.best_fx[-1]:
+                        self.best_fx.append(x)
+                    else:
+                        self.best_fx.append(self.best_fx[-1])
                 else:
                     self.best_fx.append(self.best_fx[-1])
+
 
     def save(self, filename):
         wrap = {}
