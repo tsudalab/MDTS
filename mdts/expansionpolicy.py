@@ -36,4 +36,4 @@ class XP:
 
 
     def train(self, XP_batch, XP_batch_size):
-        self.model.fit(np.array(XP_batch["states"]).reshape(XP_batch_size, self.input_dim), np.array(XP_batch["actions"]).reshape(XP_batch_size,self.output_dim), sample_weight=np.array(XP_batch["rewards"]).flatten(), verbose=0)
+        self.model.fit(np.array(XP_batch["states"]).astype('float32').reshape(XP_batch_size, self.input_dim), np.array(XP_batch["actions"]).astype('float32').reshape(XP_batch_size,self.output_dim), sample_weight=np.array(XP_batch["rewards"]).astype('float32').flatten(), verbose=0)
