@@ -13,7 +13,7 @@ from goto import with_goto
 
 
 class Tree:
-    def __init__(self, no_positions=None, position_values=None, position_values_const=None, positions_order="direct", max_flag=True, get_reward=None, constraints=None, expand_children=1, play_out=1, play_out_selection="best", use_combo=False, candidate_pool_size=None, combo_lvl=1, combo_init_random=1, combo_step=1,combo_play_out=10, use_XP=False, XP_batch_size=100):
+    def __init__(self, no_positions=None, position_values=None, position_values_const=None, positions_order="direct", max_flag=True, get_reward=None, constraints=None, cont_enforce_threshold=1000000, expand_children=1, play_out=1, play_out_selection="best", use_combo=False, candidate_pool_size=None, combo_lvl=1, combo_init_random=1, combo_step=1,combo_play_out=10, use_XP=False, XP_batch_size=100):
 
         if (no_positions is None) or (position_values is None):
             sys.exit("no_positions and position_values should not be None")
@@ -33,7 +33,7 @@ class Tree:
                 else:
                     sys.exit("no_positions and position_values do not match")
 
-
+        self.cont_enforce_threshold=cont_enforce_threshold
         if positions_order == "direct":
             self.positions_order = list(range(self.no_positions))
         elif positions_order == "reverse":
@@ -151,7 +151,7 @@ class Tree:
                     chosen_candidates.append(outcand[:])
 
         i=0
-        while (len(chosen_candidates)==0) and (i<=1000000):
+        while (len(chosen_candidates)==0) and (i<=self.cont_enforce_threshold):
             for pout in range(size):
                 cand = structure[:]
                 outcand=self._fill_cand(cand)
